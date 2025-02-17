@@ -64,7 +64,7 @@ class PetSection extends StatelessWidget {
                 child: pets.isNotEmpty
                     ? ListView.builder(
                         shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
+                        physics: const BouncingScrollPhysics(),
                         itemCount: pets.length,
                         itemBuilder: (context, index) {
                           return PetCard(
@@ -98,7 +98,7 @@ class PetCard extends StatelessWidget {
     required this.pet,
     required this.petStatusIndex,
   });
-
+ //-------------colouring of card----------------
   Color _getStatusColor() {
     switch (petStatusIndex) {
       case 0:
