@@ -1,114 +1,226 @@
-\c tompok_on_wheels
--- Insert into user_roles
-INSERT INTO user_roles (name) VALUES
-('Pet Owner'),
-('Tompokker'),
-('Service Provider');
+-- Detailed Malaysian Cat-Specific Fake Data Generation
 
--- Insert into users (Pet Owners, Tompokkers, Service Providers)
-INSERT INTO users (role_id, email, password_hash, first_name, last_name, phone, picture, mime_type) VALUES
--- Pet Owners
-(1, 'ali.ahmad@example.com', 'hash123', 'Ali', 'Ahmad', '0123456789', NULL, NULL),
-(1, 'siti.kamarul@example.com', 'hash456', 'Siti', 'Kamarul', '0112345678', NULL, NULL),
-(1, 'raj.kumar@example.com', 'hash789', 'Raj', 'Kumar', '0134567890', NULL, NULL),
--- Tompokkers
-(2, 'ahmad.farhan@example.com', 'hash101', 'Ahmad', 'Farhan', '0145678901', NULL, NULL),
-(2, 'nurul.aini@example.com', 'hash202', 'Nurul', 'Aini', '0156789012', NULL, NULL),
--- Service Providers
-(3, 'petcare.kl@example.com', 'hash303', 'PetCare', 'KL', '0167890123', NULL, NULL),
-(3, 'pawsome.grooming@example.com', 'hash404', 'Pawsome', 'Grooming', '0178901234', NULL, NULL);
+-- Malaysian-style Cat Owner Names
+WITH malaysian_cat_owners(first_name, last_name, gender, email_prefix) AS (
+    VALUES 
+    ('Aminah', 'Abdullah', 'female', 'aminah'),
+    ('Siti', 'Mohamed', 'female', 'siti'),
+    ('Nur', 'Ismail', 'female', 'nur'),
+    ('Ahmad', 'Rahman', 'male', 'ahmad'),
+    ('Muhammad', 'Hassan', 'male', 'muhammad'),
+    ('Fatimah', 'Ali', 'female', 'fatimah'),
+    ('Zaki', 'Ibrahim', 'male', 'zaki'),
+    ('Raihana', 'Yusof', 'female', 'raihana'),
+    ('Farid', 'Shaari', 'male', 'farid'),
+    ('Nadia', 'Hamid', 'female', 'nadia')
+),
+malaysian_cat_names(name, gender) AS (
+    VALUES 
+    ('Milo', 'male'),
+    ('Luna', 'female'),
+    ('Whiskers', 'male'),
+    ('Bella', 'female'),
+    ('Smokey', 'male'),
+    ('Nala', 'female'),
+    ('Tiger', 'male'),
+    ('Coco', 'female'),
+    ('Simba', 'male'),
+    ('Mittens', 'female')
+),
+malaysian_cat_breeds(breed, origin_country) AS (
+    VALUES 
+    ('Siamese', 'Thailand'),
+    ('Persian', 'Iran'),
+    ('Maine Coon', 'United States'),
+    ('Domestic Shorthair', 'Mixed Breed'),
+    ('British Shorthair', 'United Kingdom'),
+    ('Russian Blue', 'Russia'),
+    ('Bengal', 'United States')
+),
+malaysian_cities(city, state) AS (
+    VALUES 
+    ('Kuala Lumpur', 'Wilayah Persekutuan'), 
+    ('George Town', 'Pulau Pinang'), 
+    ('Johor Bahru', 'Johor'), 
+    ('Malacca City', 'Melaka'), 
+    ('Shah Alam', 'Selangor'),
+    ('Ipoh', 'Perak'),
+    ('Cyberjaya', 'Selangor'),
+    ('Petaling Jaya', 'Selangor')
+),
+malaysian_phone_prefixes(prefix) AS (
+    VALUES ('017'), ('018'), ('019'), ('014'), ('011'), ('016')
+)
 
--- Insert into pet_types
-INSERT INTO pet_types (name) VALUES
-('Dog'),
-('Cat'),
-('Bird'),
-('Rabbit');
+-- Prepare for data insertion
+BEGIN;
 
--- Insert into pets
-INSERT INTO pets (user_id, type_id, name, breed, age, picture, mime_type, notes) VALUES
--- Ali Ahmad's pets
-(1, 1, 'Max', 'Golden Retriever', 3, NULL, NULL, 'Friendly and loves to play fetch.'),
-(1, 2, 'Milo', 'Siamese', 2, NULL, NULL, 'Loves to nap on the couch.'),
--- Siti Kamarul's pets
-(2, 1, 'Buddy', 'Bulldog', 4, NULL, NULL, 'Loves long walks.'),
-(2, 3, 'Tweety', 'Parakeet', 1, NULL, NULL, 'Loves to sing in the morning.'),
--- Raj Kumar's pets
-(3, 4, 'Snowball', 'Holland Lop', 1, NULL, NULL, 'Loves carrots and lettuce.');
+-- Ensure Cat Type Exists
+INSERT INTO pet_types (name, description, size_category, special_handling_required) 
+VALUES ('Cat', 'Feline companion', 'small', false)
+ON CONFLICT (name) DO NOTHING;
 
--- Insert into service_provider_categories
-INSERT INTO service_provider_categories (name) VALUES
-('Grooming'),
-('Boarding'),
-('Veterinary');
+-- Generate Cat Owners
+WITH generated_users AS (
+    INSERT INTO users (
+        role_id, 
+        email, 
+        password_hash, 
+        salt, 
+        first_name, 
+        last_name, 
+        phone, 
+        status
+    )
+    SELECT 
+        (SELECT role_id FROM user_roles WHERE name = 'pet_owner'),
+        lower(email_prefix || '.' || last_name || '@example.com'),
+        md5(random()::text), -- Use proper hashing in production
+        md5(random()::text),
+        first_name,
+        last_name,
+        (SELECT prefix FROM malaysian_phone_prefixes ORDER BY RANDOM() LIMIT 1) || 
+        lpad(floor(random() * 10000000)::text, 7, '0'),
+        'active'
+    FROM malaysian_cat_owners
+    RETURNING user_id, first_name, last_name
+)
 
--- Insert into service_providers
-INSERT INTO service_providers (user_id, category_id, name, address, phone, email, picture, mime_type) VALUES
--- PetCare KL (Grooming and Boarding)
-(6, 1, 'PetCare KL', '123 Jalan Ampang, Kuala Lumpur', '0323456789', 'petcare.kl@example.com', NULL, NULL),
-(6, 2, 'PetCare KL', '123 Jalan Ampang, Kuala Lumpur', '0323456789', 'petcare.kl@example.com', NULL, NULL),
--- Pawsome Grooming (Grooming)
-(7, 1, 'Pawsome Grooming', '456 Jalan Bukit Bintang, Kuala Lumpur', '0334567890', 'pawsome.grooming@example.com', NULL, NULL);
+-- Generate Cats
+INSERT INTO pets (
+    user_id, 
+    type_id, 
+    name, 
+    breed, 
+    age, 
+    weight, 
+    medical_notes, 
+    special_requirements,
+    vaccination_status,
+    last_vet_visit
+)
+SELECT 
+    gu.user_id,
+    (SELECT type_id FROM pet_types WHERE name = 'Cat'),
+    cn.name,
+    cb.breed,
+    floor(random() * 15 + 1), -- Age between 1-15
+    CASE 
+        WHEN cb.breed IN ('Maine Coon', 'Bengal') THEN round((random() * 8 + 5)::numeric, 2) -- Larger breeds
+        ELSE round((random() * 5 + 2)::numeric, 2) -- Smaller breeds
+    END,
+    CASE 
+        WHEN random() < 0.2 THEN 'Requires special diet' 
+        WHEN random() < 0.1 THEN 'Mild allergies' 
+        ELSE NULL 
+    END,
+    CASE 
+        WHEN random() < 0.1 THEN 'Indoor cat only' 
+        WHEN random() < 0.05 THEN 'Needs medication' 
+        ELSE NULL 
+    END,
+    random() < 0.9, -- Vaccination status
+    CURRENT_DATE - (random() * 365 * 2)::int -- Last vet visit within past 2 years
+FROM 
+    generated_users gu,
+    malaysian_cat_names cn,
+    malaysian_cat_breeds cb
+WHERE 
+    random() < 0.8 -- Not all owners will have a cat
+LIMIT 50;
 
--- Insert into services
-INSERT INTO services (provider_id, name, description, price, duration_minutes) VALUES
--- PetCare KL Services
-(1, 'Basic Grooming', 'Bath, brush, and nail trimming.', 50.00, 60),
-(1, 'Full Grooming', 'Bath, haircut, nail trimming, and ear cleaning.', 80.00, 90),
-(2, 'Overnight Boarding', 'Comfortable overnight stay for your pet.', 100.00, 1440),
--- Pawsome Grooming Services
-(3, 'Deluxe Grooming', 'Bath, haircut, nail trimming, ear cleaning, and spa treatment.', 120.00, 120);
+-- Generate Cat-Specific Service Providers
+WITH cat_service_providers AS (
+    INSERT INTO service_providers (
+        user_id, 
+        category_id, 
+        name, 
+        address, 
+        phone, 
+        email, 
+        verification_status
+    )
+    SELECT 
+        u.user_id,
+        spc.category_id,
+        CASE spc.name
+            WHEN 'Veterinary Clinic' THEN 
+                (ARRAY['Kucing Care Veterinary', 'Feline Friends Clinic', 'Whiskers & Paws Vet'])[floor(random()*3 + 1)]
+            WHEN 'Pet Grooming' THEN 
+                (ARRAY['Purr-fect Grooming', 'Cat Spa Salon', 'Meow Makeover'])[floor(random()*3 + 1)]
+            WHEN 'Pet Boarding' THEN 
+                (ARRAY['Kitty Haven', 'Feline Retreat', 'Cat Castle Boarding'])[floor(random()*3 + 1)]
+        END,
+        (SELECT city || ', ' || state FROM malaysian_cities ORDER BY RANDOM() LIMIT 1),
+        (SELECT prefix FROM malaysian_phone_prefixes ORDER BY RANDOM() LIMIT 1) || 
+        lpad(floor(random() * 10000000)::text, 7, '0'),
+        lower(
+            replace(
+                CASE spc.name
+                    WHEN 'Veterinary Clinic' THEN 'Kucing Care Veterinary'
+                    WHEN 'Pet Grooming' THEN 'Purr-fect Grooming'
+                    ELSE 'Kitty Haven'
+                END, 
+                ' ', 
+                ''
+            ) || '@petservice.com'
+        ),
+        true
+    FROM 
+        users u
+    CROSS JOIN 
+        service_provider_categories spc
+    WHERE 
+        u.role_id = (SELECT role_id FROM user_roles WHERE name = 'vet_provider')
+    LIMIT 10
+    RETURNING provider_id, name
+)
 
--- Insert into bookings
-INSERT INTO bookings (user_id, pet_id, service_id, start_time, end_time, status) VALUES
--- Ali Ahmad's bookings
-(1, 1, 1, '2023-10-15 10:00:00', '2023-10-15 11:00:00', 'Completed'),
-(1, 2, 3, '2023-10-16 14:00:00', '2023-10-17 14:00:00', 'Scheduled'),
--- Siti Kamarul's bookings
-(2, 3, 2, '2023-10-17 09:00:00', '2023-10-17 10:30:00', 'Scheduled');
+-- Generate Services for Cat Providers
+INSERT INTO services (
+    provider_id, 
+    name, 
+    description, 
+    price, 
+    duration_minutes,
+    max_capacity,
+    special_requirements
+)
+SELECT 
+    csp.provider_id,
+    CASE 
+        WHEN random() < 0.4 THEN 'Regular Cat Check-up'
+        WHEN random() < 0.7 THEN 'Cat Vaccination Package'
+        ELSE 'Emergency Feline Consultation'
+    END,
+    CASE 
+        WHEN random() < 0.4 THEN 'Comprehensive health examination for cats'
+        WHEN random() < 0.7 THEN 'Complete vaccination and health screening'
+        ELSE 'Urgent medical consultation for feline emergencies'
+    END,
+    CASE 
+        WHEN random() < 0.4 THEN round((random() * 100 + 50)::numeric, 2)
+        WHEN random() < 0.7 THEN round((random() * 200 + 150)::numeric, 2)
+        ELSE round((random() * 300 + 250)::numeric, 2)
+    END,
+    CASE 
+        WHEN random() < 0.4 THEN 30
+        WHEN random() < 0.7 THEN 45
+        ELSE 60
+    END,
+    1,
+    CASE 
+        WHEN random() < 0.2 THEN 'Requires advanced booking'
+        WHEN random() < 0.1 THEN 'Limited slots available'
+        ELSE NULL
+    END
+FROM 
+    cat_service_providers csp
+LIMIT 30;
 
--- Insert into trips
-INSERT INTO trips (booking_id, tompokker_id, origin, destination, start_time, end_time, status) VALUES
--- Trip for Ali Ahmad's pet (Max)
-(1, 4, '123 Jalan Tun Razak, Kuala Lumpur', '123 Jalan Ampang, Kuala Lumpur', '2023-10-15 09:30:00', '2023-10-15 10:00:00', 'Completed'),
--- Trip for Siti Kamarul's pet (Buddy)
-(3, 5, '456 Jalan Pahang, Kuala Lumpur', '456 Jalan Bukit Bintang, Kuala Lumpur', '2023-10-17 08:30:00', '2023-10-17 09:00:00', 'Scheduled');
+COMMIT;
 
--- Insert into trip_tracking
-INSERT INTO trip_tracking (trip_id, location) VALUES
-(1, '123 Jalan Tun Razak, Kuala Lumpur'),
-(1, 'Jalan Sultan Ismail, Kuala Lumpur'),
-(1, '123 Jalan Ampang, Kuala Lumpur');
-
--- Insert into payment_methods
-INSERT INTO payment_methods (name) VALUES
-('Credit Card'),
-('Touch n  Go eWallet'),
-('GrabPay');
-
--- Insert into payments
-INSERT INTO payments (trip_id, method_id, amount, status) VALUES
-(1, 1, 50.00, 'Completed'),
-(2, 2, 80.00, 'Pending');
-
--- Insert into reviews
-INSERT INTO reviews (trip_id, rating, comment) VALUES
-(1, 5, 'Excellent service! Max came back happy and clean.');
-
--- Insert into insurance_packages
-INSERT INTO insurance_packages (name, description, price) VALUES
-('Basic Plan', 'Covers accidents and illnesses.', 50.00),
-('Premium Plan', 'Covers accidents, illnesses, and routine checkups.', 100.00);
-
--- Insert into insurance_purchases
-INSERT INTO insurance_purchases (trip_id, package_id) VALUES
-(1, 1);
-
--- Insert into subscription_plans
-INSERT INTO subscription_plans (name, description, price, duration_days) VALUES
-('Monthly Plan', 'Unlimited bookings for 30 days.', 30.00, 30),
-('Yearly Plan', 'Unlimited bookings for 365 days.', 300.00, 365);
-
--- Insert into user_subscriptions
-INSERT INTO user_subscriptions (user_id, plan_id, start_date, end_date) VALUES
-(1, 1, '2023-10-01', '2023-10-31');
+-- Optional: Create some sample indexes if not already created
+CREATE INDEX IF NOT EXISTS idx_pets_user_id ON pets(user_id);
+CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
+CREATE INDEX IF NOT EXISTS idx_services_provider_id ON services(provider_id);
