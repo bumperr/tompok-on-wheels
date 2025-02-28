@@ -1,26 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:tow_customer/Screens/Home/components/service_provider.dart';
 import 'package:tow_customer/class/User.dart';
 import 'package:tow_customer/class/Pet.dart';
+import 'package:tow_customer/class/ServiceProvider.dart';
 import 'package:tow_customer/constants.dart';
 import 'package:tow_customer/Screens/Home/components/pet_profile_card.dart';
 
 class UserHome extends StatelessWidget {
   final User user;
   final List<Pet> petList;
+  final List<ServiceProvider> serviceProviders;
 
   const UserHome({
     super.key,
     required this.user,
     required this.petList,
+    required this.serviceProviders,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        UserProfileSection(user: user),
-        PetSection(pets: petList),
-      ],
+    return SafeArea(
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 20),
+          child: Column(
+            children: [
+              UserProfileSection(user: user),
+              PetSection(pets: petList),
+              ServiceProviderSection(serviceProviders: serviceProviders)
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

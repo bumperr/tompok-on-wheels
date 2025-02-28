@@ -4,6 +4,7 @@ import 'package:tow_customer/components/bottom_navigation.dart';
 import 'dart:convert';
 import 'package:tow_customer/class/User.dart';
 import 'package:tow_customer/class/Pet.dart';
+import 'package:tow_customer/class/ServiceProvider.dart';
 
 //--------------sample data----------------
 User john = User(
@@ -63,7 +64,60 @@ String jsonData = '''
   ]
   ''';
 
-//------------Example ---------------------------------
+// Fake Service Provider Data for Malaysian Context
+final List<ServiceProvider> sampleServiceProviders = [
+  ServiceProvider(
+    id: 'vet001',
+    name: 'Happy Paws Veterinary Clinic',
+    category: 'Veterinary',
+    logoUrl: 'https://storage.googleapis.com/tow-assets/clinics/happy_paws.jpg',
+    isVerified: true,
+    rating: 4.7,
+    distance: 2.3,
+    travelTime: 12,
+  ),
+  ServiceProvider(
+    id: 'groomer002',
+    name: 'Purr-fect Grooming Salon',
+    category: 'Grooming',
+    logoUrl: 'https://storage.googleapis.com/tow-assets/groomers/purrfect_salon.jpg',
+    isVerified: true,
+    rating: 4.5,
+    distance: 3.7,
+    travelTime: 20,
+  ),
+  ServiceProvider(
+    id: 'boarding003',
+    name: 'Cozy Cats Retreat',
+    category: 'Boarding',
+    logoUrl: 'https://storage.googleapis.com/tow-assets/boarding/cozy_cats.jpg',
+    isVerified: true,
+    rating: 4.2,
+    distance: 5.5,
+    travelTime: 30,
+  ),
+  ServiceProvider(
+    id: 'vet004',
+    name: 'Seri Iskandar Animal Hospital',
+    category: 'Veterinary',
+    logoUrl: 'https://storage.googleapis.com/tow-assets/clinics/seri_iskandar_vet.jpg',
+    isVerified: false,
+    rating: 4.0,
+    distance: 1.8,
+    travelTime: 10,
+  ),
+  ServiceProvider(
+    id: 'groomer005',
+    name: 'Whiskers & Paws Grooming',
+    category: 'Grooming',
+    logoUrl: 'https://storage.googleapis.com/tow-assets/groomers/whiskers_paws.jpg',
+    isVerified: true,
+    rating: 4.6,
+    distance: 4.2,
+    travelTime: 25,
+  )
+];
+//------------Example  Pet  ---------------------------------
 
 // Parse JSON data into List<Pet>
 List<dynamic> petsJson = jsonDecode(jsonData);
@@ -84,7 +138,8 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   //edit here for page
   final List<Widget> _pages = [
-    UserHome(user: john, petList: pets),
+    UserHome(
+        user: john, petList: pets, serviceProviders: sampleServiceProviders),
     Center(child: Text('Services Page')),
     Center(child: Text('Track Page')),
     Center(child: Text('Profile Page')),
@@ -99,10 +154,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _pages[_selectedIndex],
-        ],
+      body: SafeArea(
+        child: _pages[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigation(
         selectedIndex: _selectedIndex,

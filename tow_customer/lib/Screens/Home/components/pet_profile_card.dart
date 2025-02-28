@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tow_customer/class/Pet.dart';
+import 'package:tow_customer/constants.dart';
 
 class PetSection extends StatelessWidget {
   final List<Pet> pets;
@@ -9,7 +10,7 @@ class PetSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final cardWidth = screenSize.width * 0.9;
-    final cardHeight = screenSize.height * 0.4; // Adjusted height
+    final cardHeight = screenSize.height * 0.3; // Adjusted height
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -98,24 +99,11 @@ class PetCard extends StatelessWidget {
     required this.pet,
     required this.petStatusIndex,
   });
- //-------------colouring of card----------------
-  Color _getStatusColor() {
-    switch (petStatusIndex) {
-      case 0:
-        return Colors.green.shade100;
-      case 1:
-        return Colors.orange.shade100;
-      case 2:
-        return Colors.blue.shade100;
-      default:
-        return Colors.grey.shade200;
-    }
-  }
+  //-------------colouring of card----------------
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: _getStatusColor(),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -175,10 +163,12 @@ class PetCard extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  backgroundColor: Colors.blue,
+                  backgroundColor: kPrimaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                onPressed: () {},
+                onPressed: (
+                    //Function to view the user current pet
+                    ) {},
                 child: const Text(
                   "View More",
                   style: TextStyle(fontSize: 16, color: Colors.white),
