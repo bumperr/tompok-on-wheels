@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tow_customer/class/ServiceProvider.dart';
+import 'package:tow_customer/Screens/Home/components/service_provider_details_screen.dart';
 
 class ServiceProviderSection extends StatefulWidget {
   final List<ServiceProvider> serviceProviders;
@@ -266,6 +267,14 @@ class ServiceProviderCard extends StatelessWidget {
               ),
               onPressed: () {
                 // TODO: Navigate to service details
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ServiceProviderDetailsScreen(
+                      serviceProvider: serviceProvider,
+                    ),
+                  ),
+                );
               },
               child: const Text(
                 'View Services',

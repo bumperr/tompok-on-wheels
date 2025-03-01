@@ -10,12 +10,18 @@ class UserHome extends StatelessWidget {
   final User user;
   final List<Pet> petList;
   final List<ServiceProvider> serviceProviders;
+  final Function(Pet) onPetAdded;
+  final Function(Pet, int) onPetUpdated;
+  final VoidCallback onEditProfile;
 
   const UserHome({
     super.key,
     required this.user,
     required this.petList,
     required this.serviceProviders,
+    required this.onPetAdded,
+    required this.onPetUpdated,
+    required this.onEditProfile,
   });
 
   @override
@@ -27,8 +33,15 @@ class UserHome extends StatelessWidget {
           padding: EdgeInsets.only(bottom: 20),
           child: Column(
             children: [
-              UserProfileSection(user: user),
-              PetSection(pets: petList),
+              UserProfileSection(
+                user: user,
+                onEditProfile: onEditProfile,
+              ),
+              PetSection(
+                pets: petList,
+                onPetAdded: onPetAdded,
+                onPetUpdated: onPetUpdated,
+              ),
               ServiceProviderSection(serviceProviders: serviceProviders)
             ],
           ),
@@ -40,10 +53,12 @@ class UserHome extends StatelessWidget {
 
 class UserProfileSection extends StatelessWidget {
   final User user;
+  final VoidCallback onEditProfile;
 
   const UserProfileSection({
     super.key,
     required this.user,
+    required this.onEditProfile,
   });
 
   @override
@@ -126,9 +141,7 @@ class UserProfileSection extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.edit, size: 20), // Reduce icon size
                 color: Colors.grey,
-                onPressed: () {
-                  // Onpressed logic
-                },
+                onPressed: onEditProfile,
               ),
             ],
           ),

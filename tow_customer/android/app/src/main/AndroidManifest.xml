@@ -2,7 +2,7 @@
     <application
         android:label="tow_customer"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/tow">
         <activity
             android:name=".MainActivity"
             android:exported="true"

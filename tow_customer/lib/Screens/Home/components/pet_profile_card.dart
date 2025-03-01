@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:tow_customer/class/Pet.dart';
 import 'package:tow_customer/constants.dart';
+import 'package:tow_customer/Screens/Home/components/pet_detail_screen.dart';
+import 'package:tow_customer/Screens/Home/components/add_pet_screen.dart';
 
 class PetSection extends StatelessWidget {
   final List<Pet> pets;
-  const PetSection({super.key, required this.pets});
+  final Function(Pet) onPetAdded;
+  final Function(Pet, int) onPetUpdated;
+
+  const PetSection({
+    super.key,
+    required this.pets,
+    required this.onPetAdded,
+    required this.onPetUpdated,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +56,17 @@ class PetSection extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.add_box_outlined,
                             color: Colors.grey),
-                        onPressed: () {},
+                        onPressed: () {
+                          // Navigate to Add Pet Screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddPetScreen(
+                                onPetAdded: onPetAdded,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 8),
                       IconButton(
@@ -71,6 +91,8 @@ class PetSection extends StatelessWidget {
                           return PetCard(
                             pet: pets[index],
                             petStatusIndex: index, // Keep index-based color
+                            onPetUpdated: (updatedPet) =>
+                                onPetUpdated(updatedPet, index),
                           );
                         },
                       )
@@ -93,11 +115,13 @@ class PetSection extends StatelessWidget {
 class PetCard extends StatelessWidget {
   final Pet pet;
   final int petStatusIndex;
+  final Function(Pet) onPetUpdated;
 
   const PetCard({
     super.key,
     required this.pet,
     required this.petStatusIndex,
+    required this.onPetUpdated,
   });
   //-------------colouring of card----------------
 
@@ -166,9 +190,18 @@ class PetCard extends StatelessWidget {
                   backgroundColor: kPrimaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                onPressed: (
-                    //Function to view the user current pet
-                    ) {},
+                onPressed: () {
+                  // Navigate to Pet Details Screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PetDetailsScreen(
+                        pet: pet,
+                        onPetUpdated: onPetUpdated,
+                      ),
+                    ),
+                  );
+                },
                 child: const Text(
                   "View More",
                   style: TextStyle(fontSize: 16, color: Colors.white),

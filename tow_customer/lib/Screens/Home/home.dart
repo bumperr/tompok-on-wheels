@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tow_customer/Screens/Home/components/user_profile.dart';
+import 'package:tow_customer/Screens/Profile/profile_page.dart';
 import 'package:tow_customer/components/bottom_navigation.dart';
 import 'dart:convert';
 import 'package:tow_customer/class/User.dart';
@@ -80,7 +81,8 @@ final List<ServiceProvider> sampleServiceProviders = [
     id: 'groomer002',
     name: 'Purr-fect Grooming Salon',
     category: 'Grooming',
-    logoUrl: 'https://storage.googleapis.com/tow-assets/groomers/purrfect_salon.jpg',
+    logoUrl:
+        'https://storage.googleapis.com/tow-assets/groomers/purrfect_salon.jpg',
     isVerified: true,
     rating: 4.5,
     distance: 3.7,
@@ -100,7 +102,8 @@ final List<ServiceProvider> sampleServiceProviders = [
     id: 'vet004',
     name: 'Seri Iskandar Animal Hospital',
     category: 'Veterinary',
-    logoUrl: 'https://storage.googleapis.com/tow-assets/clinics/seri_iskandar_vet.jpg',
+    logoUrl:
+        'https://storage.googleapis.com/tow-assets/clinics/seri_iskandar_vet.jpg',
     isVerified: false,
     rating: 4.0,
     distance: 1.8,
@@ -110,21 +113,14 @@ final List<ServiceProvider> sampleServiceProviders = [
     id: 'groomer005',
     name: 'Whiskers & Paws Grooming',
     category: 'Grooming',
-    logoUrl: 'https://storage.googleapis.com/tow-assets/groomers/whiskers_paws.jpg',
+    logoUrl:
+        'https://storage.googleapis.com/tow-assets/groomers/whiskers_paws.jpg',
     isVerified: true,
     rating: 4.6,
     distance: 4.2,
     travelTime: 25,
   )
 ];
-//------------Example  Pet  ---------------------------------
-
-// Parse JSON data into List<Pet>
-List<dynamic> petsJson = jsonDecode(jsonData);
-// ignore: unused_local_variable
-List<Pet> pets = petsJson.map((petJson) => Pet.fromJson(petJson)).toList();
-
-//----------------------
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -136,26 +132,75 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-  //edit here for page
-  final List<Widget> _pages = [
-    UserHome(
-        user: john, petList: pets, serviceProviders: sampleServiceProviders),
-    Center(child: Text('Services Page')),
-    Center(child: Text('Track Page')),
-    Center(child: Text('Profile Page')),
-  ];
+  late List<Pet> pets;
+  late User currentUser;
 
-  void _onItemSelected(int index) {
+  @override
+  void initState() {
+    super.initState();
+
+    currentUser = john;
+
+    // Parse JSON data into List<Pet>
+    List<dynamic> petsJson = jsonDecode(jsonData);
+    pets = petsJson.map((petJson) => Pet.fromJson(petJson)).toList();
+  }
+
+  // Add new pet
+  void _addPet(Pet newPet) {
     setState(() {
-      _selectedIndex = index;
+      pets.add(newPet);
     });
+  }
+
+  // Update existing pet
+  void _updatePet(Pet updatedPet, int index) {
+    setState(() {
+      pets[index] = updatedPet;
+    });
+  }
+
+  void _updateUser(User updatedUser) {
+    setState(() {
+      currentUser = updatedUser;
+    });
+  }
+
+  void _navigateToProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfilePage(
+          user: currentUser,
+          onUserUpdated: _updateUser,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Create pages list inside build method to access the current state
+    final List<Widget> pages = [
+      UserHome(
+        user: john,
+        petList: pets,
+        serviceProviders: sampleServiceProviders,
+        onPetAdded: _addPet,
+        onPetUpdated: _updatePet,
+        onEditProfile: _navigateToProfile,
+      ),
+      Center(child: Text('Services Page')),
+      Center(child: Text('Track Page')),
+      ProfilePage(
+        user: currentUser,
+        onUserUpdated: _updateUser,
+      ),
+    ];
+
     return Scaffold(
       body: SafeArea(
-        child: _pages[_selectedIndex],
+        child: pages[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigation(
         selectedIndex: _selectedIndex,
@@ -163,25 +208,10 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  void _onItemSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 }
-//--------------------------Example of page pet profile ----------------------------
-// PetProfileScreen(
-//       pets: [
-//         Pet(
-//           name: 'Oyenz',
-//           breed: 'Tabby Cat',
-//           age: 3,
-//           imageUrl:
-//               'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQe4jd3oWsdmEPVlfUtU0o8rcENg2nNdUDspQ&s',
-//           description: 'A friendly and energetic troublemaker',
-//         ),
-//         Pet(
-//           name: 'Whiskers',
-//           breed: 'Siamese Cat',
-//           age: 5,
-//           imageUrl:
-//               'https://preview.redd.it/955h4hhrz2781.jpg?width=1080&crop=smart&auto=webp&s=cc0e622bd4ac22fef887b8a77130014da81fbec0',
-//           description: 'A calm and affectionate siamese cat...',
-//         ),
-//       ],
-//     ),
