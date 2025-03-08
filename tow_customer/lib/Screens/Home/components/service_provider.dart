@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:tow_customer/class/ServiceProvider.dart';
+import 'package:tow_customer/class/Pet.dart';
+import 'package:tow_customer/class/Service.dart';
+import 'package:tow_customer/class/Booking.dart';
 import 'package:tow_customer/Screens/Home/components/service_provider_details_screen.dart';
 
 class ServiceProviderSection extends StatefulWidget {
   final List<ServiceProvider> serviceProviders;
+  final List<Pet> pets; // Changed from List<dynamic> to List<Pet>
+  final String userId;
+  final Map<String, List<Service>>?
+      services; // Changed from List<dynamic> to List<Service>
+  final Function(Booking)?
+      onBookingAdded; // Updated to specific Function(Booking) type
 
-  const ServiceProviderSection({super.key, required this.serviceProviders});
+  const ServiceProviderSection({
+    super.key,
+    required this.serviceProviders,
+    this.pets = const [], // Default to empty list
+    this.userId = '', // Default to empty string
+    this.services,
+    this.onBookingAdded,
+  });
 
   @override
   _ServiceProviderSectionState createState() => _ServiceProviderSectionState();
@@ -144,7 +160,16 @@ class _ServiceProviderSectionState extends State<ServiceProviderSection> {
                     children: filteredProviders.map((provider) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: ServiceProviderCard(serviceProvider: provider),
+                        child: ServiceProviderCard(
+                          serviceProvider: provider,
+                          pets: widget.pets,
+                          userId: widget.userId,
+                          services: widget.services != null &&
+                                  widget.services!.containsKey(provider.id)
+                              ? widget.services![provider.id]
+                              : null,
+                          onBookingAdded: widget.onBookingAdded,
+                        ),
                       );
                     }).toList(),
                   );
@@ -160,10 +185,19 @@ class _ServiceProviderSectionState extends State<ServiceProviderSection> {
 
 class ServiceProviderCard extends StatelessWidget {
   final ServiceProvider serviceProvider;
+  final List<Pet> pets; // Changed from List<dynamic> to List<Pet>
+  final String userId;
+  final List<Service>? services; // Changed from List<dynamic> to List<Service>
+  final Function(Booking)?
+      onBookingAdded; // Updated to specific Function(Booking) type
 
   const ServiceProviderCard({
     super.key,
     required this.serviceProvider,
+    required this.pets,
+    required this.userId,
+    this.services,
+    this.onBookingAdded,
   });
 
   @override
@@ -266,12 +300,15 @@ class ServiceProviderCard extends StatelessWidget {
                 minimumSize: const Size(double.infinity, 50),
               ),
               onPressed: () {
-                // TODO: Navigate to service details
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ServiceProviderDetailsScreen(
                       serviceProvider: serviceProvider,
+                      pets: pets,
+                      userId: userId,
+                      services: services,
+                      onBookingAdded: onBookingAdded,
                     ),
                   ),
                 );

@@ -28,8 +28,8 @@ class BottomNavigation extends StatelessWidget {
           title: Text('Services'),
         ),
         FlashyTabBarItem(
-          icon: Icon(Icons.map_outlined),
-          title: Text('Track'),
+          icon: Icon(Icons.calendar_today),
+          title: Text('Bookings'),
         ),
         FlashyTabBarItem(
           icon: Icon(Icons.person),

@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:tow_customer/class/ServiceProvider.dart';
+import 'package:tow_customer/class/Service.dart';
+import 'package:tow_customer/class/Pet.dart';
+import 'package:tow_customer/class/Booking.dart';
 import 'package:tow_customer/constants.dart';
 import 'package:intl/intl.dart';
 
 class ServiceProviderDetailsScreen extends StatefulWidget {
   final ServiceProvider serviceProvider;
+  final List<Pet> pets;
+  final Function(Booking)? onBookingAdded;
+  final String userId;
+  final List<Service>? services;
 
   const ServiceProviderDetailsScreen({
     Key? key,
     required this.serviceProvider,
+    required this.pets,
+    required this.userId,
+    this.onBookingAdded,
+    this.services,
   }) : super(key: key);
 
   @override
@@ -22,84 +33,77 @@ class _ServiceProviderDetailsScreenState
   late TabController _tabController;
   DateTime selectedDate = DateTime.now();
   int selectedTimeSlotIndex = -1;
+  String? selectedPetId;
+  String? selectedServiceId;
+  bool isBoardingService = false;
+  int numberOfDays = 1;
+  double servicePrice = 0.0;
+  double totalPrice = 0.0;
 
-  // Sample data - in a real app, this would come from an API
-  final List<Map<String, dynamic>> _services = [
-    {
-      'id': 's001',
-      'name': 'Basic Health Check',
-      'description':
-          'General health assessment including temperature, weight, heart rate, and visual examination.',
-      'duration': 30,
-      'price': 80.00,
-    },
-    {
-      'id': 's002',
-      'name': 'Vaccination',
-      'description':
-          'Administration of core vaccines to protect against common diseases.',
-      'duration': 15,
-      'price': 120.00,
-    },
-    {
-      'id': 's003',
-      'name': 'Dental Cleaning',
-      'description':
-          'Professional cleaning to remove plaque and tartar from teeth.',
-      'duration': 60,
-      'price': 250.00,
-    },
-    {
-      'id': 's004',
-      'name': 'Microchipping',
-      'description':
-          'Implantation of a microchip for permanent identification.',
-      'duration': 10,
-      'price': 60.00,
-    },
-    {
-      'id': 's005',
-      'name': 'Full Grooming',
-      'description':
-          'Complete grooming service including bath, haircut, nail trimming, and ear cleaning.',
-      'duration': 90,
-      'price': 150.00,
-    },
-  ];
+  // Sample data for services if not provided
+  late List<Service> _services;
 
-  final List<Map<String, dynamic>> _reviews = [
-    {
-      'id': 'r001',
-      'userName': 'Aminah Rahman',
-      'rating': 5.0,
-      'comment':
-          'Dr. Tan was so gentle with my cat. Very professional service!',
-      'date': '2023-12-15',
-    },
-    {
-      'id': 'r002',
-      'userName': 'Lee Wei Min',
-      'rating': 4.5,
-      'comment':
-          'Excellent care for my dog. The staff was knowledgeable and friendly.',
-      'date': '2023-11-28',
-    },
-    {
-      'id': 'r003',
-      'userName': 'Ahmad Firdaus',
-      'rating': 4.0,
-      'comment': 'Good service but had to wait a bit longer than expected.',
-      'date': '2023-10-10',
-    },
-    {
-      'id': 'r004',
-      'userName': 'Kavita Nair',
-      'rating': 5.0,
-      'comment':
-          'Best vet clinic in the area! My pets are always comfortable here.',
-      'date': '2023-09-22',
-    },
-  ];
+  // ScrollController to track scroll position for app bar title visibility
+  final ScrollController _scrollController = ScrollController();
+  bool _showTitle = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+
+    // Add scroll listener to show/hide title based on scroll position
+    _scrollController.addListener(() {
+      final showTitle = _scrollController.offset > 100;
+      if (showTitle != _showTitle) {
+        setState(() {
+          _showTitle = showTitle;
+        });
+      }
+    });
+
+    if (widget.services != null) {
+      _services = widget.services!;
+    } else {
+      // Default sample services
+      _services = [
+        Service(
+          id: 's001',
+          name: 'Basic Health Check',
+          description:
+              'General health assessment including temperature, weight, heart rate, and visual examination.',
+          category: 'veterinary',
+          price: 80.00,
+          duration: 30,
+        ),
+        Service(
+          id: 's002',
+          name: 'Vaccination',
+          description:
+              'Administration of core vaccines to protect against common diseases.',
+          category: 'veterinary',
+          price: 120.00,
+          duration: 15,
+        ),
+        Service(
+          id: 's003',
+          name: 'Dental Cleaning',
+          description:
+              'Professional cleaning to remove plaque and tartar from teeth.',
+          category: 'veterinary',
+          price: 250.00,
+          duration: 60,
+        ),
+      ];
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _tabController.dispose();
+    super.dispose();
+  }
 
   // Generate time slots for the selected date
   List<TimeOfDay> getTimeSlots() {
@@ -141,16 +145,31 @@ class _ServiceProviderDetailsScreenState
     return slots;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+  void _updateTotalPrice() {
+    if (selectedServiceId != null) {
+      final selectedService =
+          _services.firstWhere((s) => s.id == selectedServiceId);
+      servicePrice = selectedService.price;
+
+      if (isBoardingService && selectedService.isPricePerDay) {
+        totalPrice = servicePrice * numberOfDays;
+      } else {
+        totalPrice = servicePrice;
+      }
+    }
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  bool _canProceedToBooking() {
+    if (selectedPetId == null || selectedServiceId == null) {
+      return false;
+    }
+
+    if (isBoardingService) {
+      return true; // For boarding, we just need pet, service, and dates
+    } else {
+      return selectedTimeSlotIndex >=
+          0; // For other services, we need a time slot
+    }
   }
 
   @override
@@ -165,8 +184,11 @@ class _ServiceProviderDetailsScreenState
               pinned: true,
               backgroundColor: kPrimaryColor,
               foregroundColor: Colors.white,
+              title: _showTitle ? Text(widget.serviceProvider.name) : null,
               flexibleSpace: FlexibleSpaceBar(
-                title: Text(widget.serviceProvider.name),
+                title: !_showTitle ? Text(widget.serviceProvider.name) : null,
+                titlePadding:
+                    const EdgeInsetsDirectional.only(start: 16, bottom: 56),
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -251,7 +273,18 @@ class _ServiceProviderDetailsScreenState
   }
 
   Widget _buildServicesTab() {
+    // Group services by category
+    Map<String, List<Service>> servicesByCategory = {};
+
+    for (var service in _services) {
+      if (!servicesByCategory.containsKey(service.category)) {
+        servicesByCategory[service.category] = [];
+      }
+      servicesByCategory[service.category]!.add(service);
+    }
+
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,7 +318,7 @@ class _ServiceProviderDetailsScreenState
                     leading: const Icon(Icons.star, color: Colors.amber),
                     title: const Text('Rating'),
                     subtitle: Text(
-                        '${widget.serviceProvider.rating} (${_reviews.length} reviews)'),
+                        '${widget.serviceProvider.rating} (${_services.length} reviews)'),
                     contentPadding: EdgeInsets.zero,
                   ),
                   ListTile(
@@ -302,25 +335,6 @@ class _ServiceProviderDetailsScreenState
                         'Monday - Friday: 9:00 AM - 6:00 PM\nSaturday: 9:00 AM - 1:00 PM\nSunday: Closed'),
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.directions),
-                      label: const Text('Get Directions'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        // Open maps for directions
-                      },
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -328,24 +342,32 @@ class _ServiceProviderDetailsScreenState
 
           const SizedBox(height: 20),
 
-          // Services List
-          const Text(
-            'Available Services',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          ..._services.map((service) => _buildServiceCard(service)).toList(),
+          // Services List by Category
+          ...servicesByCategory.entries.map((entry) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${entry.key.substring(0, 1).toUpperCase()}${entry.key.substring(1)} Services',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ...entry.value
+                    .map((service) => _buildServiceCard(service))
+                    .toList(),
+                const SizedBox(height: 20),
+              ],
+            );
+          }).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildServiceCard(Map<String, dynamic> service) {
+  Widget _buildServiceCard(Service service) {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 16),
@@ -353,15 +375,18 @@ class _ServiceProviderDetailsScreenState
         borderRadius: BorderRadius.circular(12),
       ),
       child: ExpansionTile(
-        title: Text(
-          service['name'],
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+        title: Align(
+          alignment: Alignment.center,
+          child: Text(
+            service.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
         ),
         subtitle: Text(
-          'RM ${service['price'].toStringAsFixed(2)} · ${service['duration']} min',
+          'RM ${service.price.toStringAsFixed(2)}${service.isPricePerDay ? '/day' : ''} · ${service.duration < 60 ? '${service.duration} min' : '${service.duration ~/ 60} hr${service.duration ~/ 60 > 1 ? 's' : ''}${service.duration % 60 > 0 ? ' ${service.duration % 60} min' : ''}'}',
           style: TextStyle(color: Colors.grey[600]),
         ),
         children: [
@@ -378,7 +403,35 @@ class _ServiceProviderDetailsScreenState
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(service['description']),
+                Text(service.description),
+                if (service.isPremium) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber[100],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.amber),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.star, color: Colors.amber[800], size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Premium Service',
+                          style: TextStyle(
+                            color: Colors.amber[800],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -392,8 +445,12 @@ class _ServiceProviderDetailsScreenState
                       ),
                     ),
                     onPressed: () {
-                      // Navigate to booking tab with pre-selected service
+                      // Pre-select this service and navigate to booking tab
                       setState(() {
+                        selectedServiceId = service.id;
+                        isBoardingService = service.category == 'boarding' &&
+                            service.isPricePerDay;
+                        _updateTotalPrice();
                         _tabController.animateTo(1); // Switch to booking tab
                       });
                     },
@@ -416,6 +473,113 @@ class _ServiceProviderDetailsScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Pet Selection
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Select Pet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Enhanced pet selection with images
+                  Container(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.3,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: widget.pets.map((pet) {
+                          final isSelected = pet.id == selectedPetId;
+                          return InkWell(
+                            onTap: () {
+                              setState(() {
+                                selectedPetId = pet.id;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: isSelected
+                                      ? kPrimaryColor
+                                      : Colors.grey[300]!,
+                                  width: isSelected ? 2 : 1,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                color: isSelected
+                                    ? kPrimaryColor.withOpacity(0.1)
+                                    : Colors.transparent,
+                              ),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 24,
+                                    backgroundImage: NetworkImage(
+                                      pet.imageUrl.isNotEmpty
+                                          ? pet.imageUrl
+                                          : 'https://example.com/placeholder_pet.jpg',
+                                    ),
+                                    backgroundColor: Colors.grey[200],
+                                    child: pet.imageUrl.isEmpty
+                                        ? const Icon(Icons.pets,
+                                            size: 24, color: Colors.grey)
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          pet.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${pet.breed} · ${pet.age} years',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    const Icon(Icons.check_circle,
+                                        color: kPrimaryColor),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
           // Service Selection
           Card(
             elevation: 4,
@@ -435,29 +599,102 @@ class _ServiceProviderDetailsScreenState
                     ),
                   ),
                   const SizedBox(height: 8),
+                  // Fixed service dropdown to prevent overflow
                   DropdownButtonFormField<String>(
+                    isExpanded: true, // This fixes the overflow issue
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                     hint: const Text('Choose a service'),
+                    value: selectedServiceId,
                     items: _services.map<DropdownMenuItem<String>>((service) {
                       return DropdownMenuItem<String>(
-                        value: service['id'].toString(),
+                        value: service.id,
                         child: Text(
-                          '${service['name']} - RM ${service['price'].toStringAsFixed(2)}',
+                          '${service.name} - RM ${service.price.toStringAsFixed(2)}${service.isPricePerDay ? '/day' : ''}',
+                          overflow: TextOverflow.ellipsis,
                         ),
                       );
                     }).toList(),
                     onChanged: (value) {
-                      // Handle service selection
+                      setState(() {
+                        selectedServiceId = value;
+                        // Check if boarding service is selected
+                        if (value != null) {
+                          final selectedService =
+                              _services.firstWhere((s) => s.id == value);
+                          isBoardingService =
+                              selectedService.category == 'boarding' &&
+                                  selectedService.isPricePerDay;
+                          _updateTotalPrice();
+                        }
+                      });
                     },
                   ),
                 ],
               ),
             ),
           ),
+
+          // Boarding days selection (only show if boarding service is selected)
+          if (isBoardingService) ...[
+            const SizedBox(height: 20),
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Number of Days',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove),
+                          onPressed: numberOfDays > 1
+                              ? () {
+                                  setState(() {
+                                    numberOfDays--;
+                                    _updateTotalPrice();
+                                  });
+                                }
+                              : null,
+                        ),
+                        Expanded(
+                          child: Text(
+                            numberOfDays.toString(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: () {
+                            setState(() {
+                              numberOfDays++;
+                              _updateTotalPrice();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 20),
 
@@ -501,7 +738,86 @@ class _ServiceProviderDetailsScreenState
 
           const SizedBox(height: 20),
 
-          // Time Slot Selection
+          // Time Slot Selection (only show if not boarding service)
+          if (!isBoardingService)
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Available Time Slots for ${DateFormat('EEEE, MMMM d').format(selectedDate)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Check if it's Sunday or no slots available
+                    if (selectedDate.weekday == 7)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            'Closed on Sundays',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                      )
+                    else if (timeSlots.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            'No available time slots for this date',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 12,
+                        children: List.generate(timeSlots.length, (index) {
+                          final timeSlot = timeSlots[index];
+                          final isSelected = index == selectedTimeSlotIndex;
+
+                          return ChoiceChip(
+                            label: Text(timeSlot.format(context)),
+                            selected: isSelected,
+                            selectedColor: kPrimaryColor,
+                            backgroundColor: Colors.grey[200],
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black,
+                            ),
+                            onSelected: (selected) {
+                              setState(() {
+                                selectedTimeSlotIndex = selected ? index : -1;
+                              });
+                            },
+                          );
+                        }),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+          const SizedBox(height: 20),
+
+          // Price summary
           Card(
             elevation: 4,
             shape: RoundedRectangleBorder(
@@ -512,96 +828,85 @@ class _ServiceProviderDetailsScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Available Time Slots for ${DateFormat('EEEE, MMMM d').format(selectedDate)}',
-                    style: const TextStyle(
+                  const Text(
+                    'Price Summary',
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Check if it's Sunday or no slots available
-                  if (selectedDate.weekday == 7)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'Closed on Sundays',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
-                    )
-                  else if (timeSlots.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'No available time slots for this date',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 12,
-                      children: List.generate(timeSlots.length, (index) {
-                        final timeSlot = timeSlots[index];
-                        final isSelected = index == selectedTimeSlotIndex;
-
-                        return ChoiceChip(
-                          label: Text(timeSlot.format(context)),
-                          selected: isSelected,
-                          selectedColor: kPrimaryColor,
-                          backgroundColor: Colors.grey[200],
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                          ),
-                          onSelected: (selected) {
-                            setState(() {
-                              selectedTimeSlotIndex = selected ? index : -1;
-                            });
-                          },
-                        );
-                      }),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Service Fee'),
+                      Text(
+                          'RM ${servicePrice.toStringAsFixed(2)}${isBoardingService ? '/day' : ''}'),
+                    ],
+                  ),
+                  if (isBoardingService) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Number of Days'),
+                        Text('$numberOfDays days'),
+                      ],
                     ),
-
-                  const SizedBox(height: 30),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  ],
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
-                      onPressed: selectedTimeSlotIndex >= 0
-                          ? () {
-                              // Handle booking confirmation
-                              _showBookingConfirmDialog();
-                            }
-                          : null,
-                      child: const Text(
-                        'Confirm Booking',
-                        style: TextStyle(fontSize: 18),
+                      Text(
+                        'RM ${totalPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
+
+          const SizedBox(height: 30),
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: _canProceedToBooking()
+                  ? () {
+                      // Handle booking confirmation
+                      _showBookingConfirmDialog();
+                    }
+                  : null,
+              child: const Text(
+                'Confirm Booking',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+          ),
+
+          // Add extra space at the bottom for better scrolling experience
+          const SizedBox(height: 30),
         ],
       ),
     );
@@ -609,36 +914,172 @@ class _ServiceProviderDetailsScreenState
 
   void _showBookingConfirmDialog() {
     final timeSlots = getTimeSlots();
-    final selectedTimeSlot =
-        selectedTimeSlotIndex >= 0 ? timeSlots[selectedTimeSlotIndex] : null;
+    final selectedTimeSlot = !isBoardingService && selectedTimeSlotIndex >= 0
+        ? timeSlots[selectedTimeSlotIndex]
+        : null;
+
+    final selectedPet =
+        widget.pets.firstWhere((pet) => pet.id == selectedPetId);
+    final selectedService =
+        _services.firstWhere((s) => s.id == selectedServiceId);
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Confirm Booking'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Please review your booking details:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Text('Provider: ${widget.serviceProvider.name}'),
-              Text(
-                  'Service: ${_services[0]['name']}'), // Replace with actual selected service
-              Text(
-                  'Date: ${DateFormat('EEEE, MMMM d, yyyy').format(selectedDate)}'),
-              if (selectedTimeSlot != null)
-                Text('Time: ${selectedTimeSlot.format(context)}'),
-              const SizedBox(height: 12),
-              const Text(
-                'Note: You can cancel your booking up to 24 hours before the appointment time.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Please review your booking details:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+
+                // Provider info with image
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage:
+                          NetworkImage(widget.serviceProvider.logoUrl),
+                      backgroundColor: Colors.grey[200],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.serviceProvider.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            widget.serviceProvider.category,
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const Divider(height: 24),
+
+                // Pet info with image
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: NetworkImage(
+                        selectedPet.imageUrl.isNotEmpty
+                            ? selectedPet.imageUrl
+                            : 'https://example.com/placeholder_pet.jpg',
+                      ),
+                      backgroundColor: Colors.grey[200],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            selectedPet.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '${selectedPet.breed} · ${selectedPet.age} years',
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Service details
+                Row(
+                  children: [
+                    const Icon(Icons.medical_services,
+                        size: 20, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        selectedService.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Date & Time
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today,
+                        size: 20, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text(
+                      DateFormat('EEEE, MMMM d, yyyy').format(selectedDate),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 4),
+
+                if (isBoardingService)
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time,
+                          size: 20, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Text('Duration: $numberOfDays days'),
+                    ],
+                  )
+                else if (selectedTimeSlot != null)
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time,
+                          size: 20, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Text('Time: ${selectedTimeSlot.format(context)}'),
+                    ],
+                  ),
+
+                const SizedBox(height: 16),
+
+                // Price
+                Row(
+                  children: [
+                    const Icon(Icons.attach_money,
+                        size: 20, color: kPrimaryColor),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Total Price: RM ${totalPrice.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+                  'Note: You can cancel your booking up to 24 hours before the appointment time.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -652,6 +1093,43 @@ class _ServiceProviderDetailsScreenState
                 backgroundColor: kPrimaryColor,
               ),
               onPressed: () {
+                // Create a new booking
+                final TimeOfDay endTime;
+                if (isBoardingService) {
+                  endTime = const TimeOfDay(hour: 17, minute: 0);
+                } else if (selectedTimeSlot != null) {
+                  final totalMinutes = selectedTimeSlot.hour * 60 +
+                      selectedTimeSlot.minute +
+                      selectedService.duration;
+                  endTime = TimeOfDay(
+                    hour: (totalMinutes ~/ 60) % 24,
+                    minute: totalMinutes % 60,
+                  );
+                } else {
+                  endTime = const TimeOfDay(hour: 0, minute: 0); // Fallback
+                }
+
+                final booking = Booking(
+                  id: 'book${DateTime.now().millisecondsSinceEpoch}', // Generate unique ID
+                  userId: widget.userId,
+                  petId: selectedPetId!,
+                  serviceProviderId: widget.serviceProvider.id,
+                  serviceId: selectedServiceId!,
+                  date: selectedDate,
+                  startTime: isBoardingService
+                      ? const TimeOfDay(hour: 9, minute: 0)
+                      : timeSlots[selectedTimeSlotIndex],
+                  endTime: endTime,
+                  status: 'Confirmed',
+                  days: isBoardingService ? numberOfDays : 1,
+                  totalPrice: totalPrice,
+                );
+
+                // Call the callback to add the booking
+                if (widget.onBookingAdded != null) {
+                  widget.onBookingAdded!(booking);
+                }
+
                 Navigator.pop(context);
                 // Show confirmation
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -722,10 +1200,10 @@ class _ServiceProviderDetailsScreenState
                           }),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          'Based on ${_reviews.length} reviews',
+                        const Text(
+                          'Based on 56 reviews',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: Colors.grey,
                             fontSize: 14,
                           ),
                         ),
@@ -772,7 +1250,7 @@ class _ServiceProviderDetailsScreenState
 
         const SizedBox(height: 20),
 
-        // Reviews List
+        // Reviews List (sample data)
         const Text(
           'Recent Reviews',
           style: TextStyle(
@@ -783,7 +1261,28 @@ class _ServiceProviderDetailsScreenState
 
         const SizedBox(height: 10),
 
-        ..._reviews.map((review) => _buildReviewCard(review)).toList(),
+        _buildReviewCard({
+          'userName': 'Aminah Rahman',
+          'rating': 5.0,
+          'comment':
+              'Dr. Tan was so gentle with my cat. Very professional service!',
+          'date': '2023-12-15',
+        }),
+
+        _buildReviewCard({
+          'userName': 'Lee Wei Min',
+          'rating': 4.5,
+          'comment':
+              'Excellent care for my dog. The staff was knowledgeable and friendly.',
+          'date': '2023-11-28',
+        }),
+
+        _buildReviewCard({
+          'userName': 'Ahmad Firdaus',
+          'rating': 4.0,
+          'comment': 'Good service but had to wait a bit longer than expected.',
+          'date': '2023-10-10',
+        }),
       ],
     );
   }
@@ -834,7 +1333,7 @@ class _ServiceProviderDetailsScreenState
   }
 
   Widget _buildReviewCard(Map<String, dynamic> review) {
-    final rating = review['rating'];
+    final rating = review['rating'] as double;
     final date =
         DateFormat('MMM d, yyyy').format(DateTime.parse(review['date']));
 
@@ -884,8 +1383,8 @@ class _ServiceProviderDetailsScreenState
             ),
             const SizedBox(height: 8),
             Text(review['comment']),
-            if (review['id'] ==
-                'r001') // Just for the first review as an example
+            if (review['userName'] ==
+                'Aminah Rahman') // Just for the first review as an example
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -893,11 +1392,11 @@ class _ServiceProviderDetailsScreenState
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 16,
                         backgroundColor: kPrimaryColor,
-                        child:
-                            Icon(Icons.business, color: Colors.white, size: 16),
+                        child: const Icon(Icons.business,
+                            color: Colors.white, size: 16),
                       ),
                       const SizedBox(width: 8),
                       Expanded(

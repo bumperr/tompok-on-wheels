@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:tow_customer/Screens/Home/components/service_provider.dart';
 import 'package:tow_customer/class/User.dart';
 import 'package:tow_customer/class/Pet.dart';
+import 'package:tow_customer/class/Service.dart';
+import 'package:tow_customer/class/Booking.dart';
 import 'package:tow_customer/class/ServiceProvider.dart';
 import 'package:tow_customer/constants.dart';
 import 'package:tow_customer/Screens/Home/components/pet_profile_card.dart';
+import 'package:tow_customer/components/services_category_widget.dart';
+import 'package:tow_customer/components/user_bookings_widget.dart';
 
 class UserHome extends StatelessWidget {
   final User user;
   final List<Pet> petList;
   final List<ServiceProvider> serviceProviders;
+  final Map<String, List<Service>> services;
+  final List<Booking> bookings;
   final Function(Pet) onPetAdded;
   final Function(Pet, int) onPetUpdated;
+  final Function(Booking) onBookingAdded;
   final VoidCallback onEditProfile;
 
   const UserHome({
@@ -19,8 +25,11 @@ class UserHome extends StatelessWidget {
     required this.user,
     required this.petList,
     required this.serviceProviders,
+    required this.services,
+    required this.bookings,
     required this.onPetAdded,
     required this.onPetUpdated,
+    required this.onBookingAdded,
     required this.onEditProfile,
   });
 
@@ -30,19 +39,48 @@ class UserHome extends StatelessWidget {
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
-          padding: EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.only(bottom: 20),
           child: Column(
             children: [
               UserProfileSection(
                 user: user,
                 onEditProfile: onEditProfile,
               ),
+              const SizedBox(height: 16),
+
+              // Services Category Widget
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ServicesCategoryWidget(
+                  serviceProviders: serviceProviders,
+                  pets: petList,
+                  userId: user.id,
+                  services: services,
+                  onBookingAdded: onBookingAdded,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // User Bookings Widget
+              if (bookings.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: UserBookingsWidget(
+                    bookings: bookings,
+                    pets: petList,
+                    serviceProviders: serviceProviders,
+                    services: services,
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+
               PetSection(
                 pets: petList,
                 onPetAdded: onPetAdded,
                 onPetUpdated: onPetUpdated,
               ),
-              ServiceProviderSection(serviceProviders: serviceProviders)
             ],
           ),
         ),
