@@ -1256,7 +1256,7 @@ class _ServiceProviderDetailsScreenState
                         ? const TimeOfDay(hour: 9, minute: 0)
                         : timeSlots[selectedTimeSlotIndex],
                     endTime: endTime,
-                    status: 'Confirmed',
+                    status: 'Pending',
                     days: isBoardingService ? numberOfDays : 1,
                     totalPrice: totalPrice,
                   );

@@ -3,7 +3,9 @@ import 'package:tow_customer/Screens/Welcome/welcome_screen.dart';
 import 'package:tow_customer/constants.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void main() => runApp(const MyApp());
+void main() async {
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);

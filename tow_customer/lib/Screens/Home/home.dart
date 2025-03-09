@@ -283,10 +283,10 @@ List<Booking> sampleBookings = [
     petId: 'pet1',
     serviceProviderId: 'groomer002',
     serviceId: 'g001',
-    date: DateTime.now().add(const Duration(days: 3)),
+    date: DateTime.now().add(const Duration(days: 1)),
     startTime: const TimeOfDay(hour: 10, minute: 0),
     endTime: const TimeOfDay(hour: 11, minute: 0),
-    status: 'Confirmed',
+    status: 'In Transit',
     totalPrice: 60.00,
   )
 ];
