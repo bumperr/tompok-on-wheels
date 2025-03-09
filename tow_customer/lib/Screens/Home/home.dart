@@ -23,12 +23,12 @@ User john = User(
 String jsonData = '''
   [
     {
-      "name": "Whiskers",
+      "name": "Oyen",
       "weight": 4.2,
       "size": "Small",
       "age": 2,
-      "imageUrl": "https://example.com/whiskers.jpg",
-      "breed": "Siamese",
+      "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmouhPkSY4N1Jvr4ga6dXn8tEAdsn-zQwszw&s",
+      "breed": "Tabby",
       "notes": [
         {
           "title": "Vet Checkup",
@@ -45,11 +45,11 @@ String jsonData = '''
       ]
     },
     {
-      "name": "Mittens",
+      "name": "Tompok",
       "weight": 5.1,
       "size": "Medium",
       "age": 4,
-      "imageUrl": "https://example.com/mittens.jpg",
+      "imageUrl": "https://www.thesprucepets.com/thmb/auxDlxFFULotHDcGrgRzzLy47hA=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/calico-cats-profile-554694-hero-c7ba9806ce1f4fb1b4d4edc2fd820a0d.jpg",
       "breed": "Maine Coon",
       "notes": [
         {
@@ -73,9 +73,10 @@ String jsonData = '''
 final List<ServiceProvider> sampleServiceProviders = [
   ServiceProvider(
     id: 'vet001',
-    name: 'Happy Paws Veterinary Clinic',
+    name: 'Klinik Haiwan Seri Iskandar',
     category: 'Veterinary',
-    logoUrl: 'https://storage.googleapis.com/tow-assets/clinics/happy_paws.jpg',
+    logoUrl:
+        'https://lh3.googleusercontent.com/gps-cs-s/AB5caB_QK5w3VibrqB-MOO-5up-FYYj0HsB10IAEq8MK-sCornca_LXokhOzhTSSFcM0Ilk9esDzAB9hg4a3geO3YMUdAAQDMVABH7yT1kpdQMqcC6W6-VPQXEyoP9IXspcsg1PDfnyy5w=w231-h193-n-k-no-nu',
     isVerified: true,
     rating: 4.7,
     distance: 2.3,
@@ -83,10 +84,10 @@ final List<ServiceProvider> sampleServiceProviders = [
   ),
   ServiceProvider(
     id: 'groomer002',
-    name: 'Purr-fect Grooming Salon',
+    name: 'Miz Groomers Pet Care',
     category: 'Grooming',
     logoUrl:
-        'https://storage.googleapis.com/tow-assets/groomers/purrfect_salon.jpg',
+        'https://lh3.googleusercontent.com/p/AF1QipO55nbE5pyrVrTXvk8g0pOAgATg69oU02K1-Zd6=s3072-w3072-h1650-rw',
     isVerified: true,
     rating: 4.5,
     distance: 3.7,
@@ -94,9 +95,10 @@ final List<ServiceProvider> sampleServiceProviders = [
   ),
   ServiceProvider(
     id: 'boarding003',
-    name: 'Cozy Cats Retreat',
+    name: 'Pawsome Cat Studio, Hotel & Spa',
     category: 'Boarding',
-    logoUrl: 'https://storage.googleapis.com/tow-assets/boarding/cozy_cats.jpg',
+    logoUrl:
+        'https://lh3.googleusercontent.com/gps-cs-s/AB5caB9Q6QWjlhqwHEi7bpRD-NrpbBwmUZ3dCXT5k4o7lVkuwQLOJYQhX-50F0qKVW9dOZAUMXDw5ZV9SEZ3OSj9qRKgIOho7mIamDYAz9UOV79pP2VEvsh1LeA3u4EpQGwTiVNpfnRudQ=s3072-w3072-h1650-rw',
     isVerified: true,
     rating: 4.2,
     distance: 5.5,
@@ -104,10 +106,10 @@ final List<ServiceProvider> sampleServiceProviders = [
   ),
   ServiceProvider(
     id: 'vet004',
-    name: 'Seri Iskandar Animal Hospital',
+    name: 'Nadin Animal Clinic',
     category: 'Veterinary',
     logoUrl:
-        'https://storage.googleapis.com/tow-assets/clinics/seri_iskandar_vet.jpg',
+        'https://lh3.googleusercontent.com/p/AF1QipOOP1cdW4A_kEp5EnRbbt1NrzVTSkzvqQXBAetN=s3072-w3072-h1650-rw',
     isVerified: false,
     rating: 4.0,
     distance: 1.8,
@@ -115,10 +117,10 @@ final List<ServiceProvider> sampleServiceProviders = [
   ),
   ServiceProvider(
     id: 'groomer005',
-    name: 'Whiskers & Paws Grooming',
+    name: 'Paws & Furs Pet House',
     category: 'Grooming',
     logoUrl:
-        'https://storage.googleapis.com/tow-assets/groomers/whiskers_paws.jpg',
+        'https://lh3.googleusercontent.com/p/AF1QipOemAom3vHtawIvmTDwIAp0Qr_YQ7L5YweWlAwb=s3072-w3072-h1650-rw',
     isVerified: true,
     rating: 4.6,
     distance: 4.2,
@@ -274,7 +276,20 @@ final Map<String, List<Service>> sampleServices = {
 };
 
 // Sample bookings data
-List<Booking> sampleBookings = [];
+List<Booking> sampleBookings = [
+  Booking(
+    id: 'book001',
+    userId: 'johnthecatlover',
+    petId: 'pet1',
+    serviceProviderId: 'groomer002',
+    serviceId: 'g001',
+    date: DateTime.now().add(const Duration(days: 3)),
+    startTime: const TimeOfDay(hour: 10, minute: 0),
+    endTime: const TimeOfDay(hour: 11, minute: 0),
+    status: 'Confirmed',
+    totalPrice: 60.00,
+  )
+];
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -303,22 +318,6 @@ class _HomePageState extends State<HomePage> {
     for (int i = 0; i < pets.length; i++) {
       pets[i].id = 'pet${i + 1}';
     }
-
-    // Initialize with a sample booking
-    sampleBookings.add(
-      Booking(
-        id: 'book001',
-        userId: currentUser.id,
-        petId: 'pet1',
-        serviceProviderId: 'groomer002',
-        serviceId: 'g001',
-        date: DateTime.now().add(const Duration(days: 3)),
-        startTime: const TimeOfDay(hour: 10, minute: 0),
-        endTime: const TimeOfDay(hour: 11, minute: 0),
-        status: 'Confirmed',
-        totalPrice: 60.00,
-      ),
-    );
   }
 
   // Add new pet

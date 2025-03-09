@@ -5,6 +5,7 @@ import 'package:tow_customer/class/Pet.dart';
 import 'package:tow_customer/class/Booking.dart';
 import 'package:tow_customer/constants.dart';
 import 'package:intl/intl.dart';
+import 'package:tow_customer/Screens/Payment/payment_page.dart';
 
 class ServiceProviderDetailsScreen extends StatefulWidget {
   final ServiceProvider serviceProvider;
@@ -39,7 +40,7 @@ class _ServiceProviderDetailsScreenState
   int numberOfDays = 1;
   double servicePrice = 0.0;
   double totalPrice = 0.0;
-
+  bool includeInsurance = false; // Add this line for insurance option
   // Sample data for services if not provided
   late List<Service> _services;
 
@@ -54,7 +55,7 @@ class _ServiceProviderDetailsScreenState
 
     // Add scroll listener to show/hide title based on scroll position
     _scrollController.addListener(() {
-      final showTitle = _scrollController.offset > 100;
+      final showTitle = _scrollController.offset > 50;
       if (showTitle != _showTitle) {
         setState(() {
           _showTitle = showTitle;
@@ -151,11 +152,15 @@ class _ServiceProviderDetailsScreenState
           _services.firstWhere((s) => s.id == selectedServiceId);
       servicePrice = selectedService.price;
 
-      if (isBoardingService && selectedService.isPricePerDay) {
-        totalPrice = servicePrice * numberOfDays;
-      } else {
-        totalPrice = servicePrice;
-      }
+      double basePrice = isBoardingService && selectedService.isPricePerDay
+          ? servicePrice * numberOfDays
+          : servicePrice;
+
+      double distanceFee =
+          (widget.serviceProvider.distance ?? 0) * 3.0; // 3 RM per KM
+      double subtotal = basePrice + distanceFee;
+      double serviceCharge = subtotal * 0.06; // 6% service charge
+      totalPrice = subtotal + serviceCharge + (includeInsurance ? 5.0 : 0.0);
     }
   }
 
@@ -172,6 +177,27 @@ class _ServiceProviderDetailsScreenState
     }
   }
 
+// Helper methods for price calculations
+  double calculateServiceFee(Map<String, dynamic> service) {
+    // Return the price from the service
+    return service['price'] ?? 0.0;
+  }
+
+  double calculateTompokkerFee(double distance) {
+    // RM 3 per km
+    return distance * 3.0;
+  }
+
+  double calculateSoftwareServiceCharge(double subtotal) {
+    // 5% platform fee (typical for Malaysian service apps)
+    return subtotal * 0.05;
+  }
+
+  double calculateTax(double subtotal) {
+    // 6% service tax in Malaysia (SST)
+    return subtotal * 0.06;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,11 +210,40 @@ class _ServiceProviderDetailsScreenState
               pinned: true,
               backgroundColor: kPrimaryColor,
               foregroundColor: Colors.white,
-              title: _showTitle ? Text(widget.serviceProvider.name) : null,
+              title: _showTitle
+                  ? Text(
+                      widget.serviceProvider.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 10.0,
+                            color: Colors.black,
+                            offset: Offset(2.0, 2.0),
+                          ),
+                        ],
+                      ),
+                    )
+                  : null,
               flexibleSpace: FlexibleSpaceBar(
-                title: !_showTitle ? Text(widget.serviceProvider.name) : null,
+                title: !_showTitle
+                    ? Text(
+                        widget.serviceProvider.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 10.0,
+                              color: Colors.black,
+                              offset: Offset(2.0, 2.0),
+                            ),
+                          ],
+                        ),
+                      )
+                    : null,
                 titlePadding:
-                    const EdgeInsetsDirectional.only(start: 16, bottom: 56),
+                    const EdgeInsetsDirectional.only(start: 16, bottom: 80),
+                centerTitle: true,
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -203,15 +258,14 @@ class _ServiceProviderDetailsScreenState
                         );
                       },
                     ),
-                    // Gradient overlay for better text visibility
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.7),
+                            Colors.black.withAlpha((0.3 * 255).toInt()),
+                            Colors.black.withAlpha((0.7 * 255).toInt()),
                           ],
                         ),
                       ),
@@ -222,10 +276,21 @@ class _ServiceProviderDetailsScreenState
               bottom: TabBar(
                 controller: _tabController,
                 indicatorColor: Colors.white,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
                 tabs: const [
-                  Tab(text: 'Services', icon: Icon(Icons.medical_services)),
-                  Tab(text: 'Booking', icon: Icon(Icons.calendar_today)),
-                  Tab(text: 'Reviews', icon: Icon(Icons.star_rate)),
+                  Tab(
+                    text: 'Services',
+                    icon: Icon(Icons.medical_services, color: Colors.white),
+                  ),
+                  Tab(
+                    text: 'Booking',
+                    icon: Icon(Icons.calendar_today, color: Colors.white),
+                  ),
+                  Tab(
+                    text: 'Reviews',
+                    icon: Icon(Icons.star_rate, color: Colors.white),
+                  ),
                 ],
               ),
               actions: [
@@ -830,10 +895,7 @@ class _ServiceProviderDetailsScreenState
                 children: [
                   const Text(
                     'Price Summary',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -854,25 +916,75 @@ class _ServiceProviderDetailsScreenState
                       ],
                     ),
                   ],
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Distance Fee (RM 3/km)'),
+                      Text(
+                          'RM ${(widget.serviceProvider.distance != null ? widget.serviceProvider.distance! * 3.0 : 0.0).toStringAsFixed(2)}'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Service Charge (6%)'),
+                      Text(
+                          'RM ${((servicePrice * (isBoardingService ? numberOfDays : 1) + (widget.serviceProvider.distance ?? 0) * 3.0) * 0.06).toStringAsFixed(2)}'),
+                    ],
+                  ),
+                  if (includeInsurance) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Insurance'),
+                        const Text('RM 5.00'),
+                      ],
+                    ),
+                  ],
                   const Divider(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        'RM ${totalPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
+                      const Text('Total',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('RM ${totalPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
                     ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          Card(
+            elevation: 4,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Add Insurance (RM 5.00)',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  Switch(
+                    value: includeInsurance,
+                    onChanged: (value) {
+                      setState(() {
+                        includeInsurance = value;
+                        _updateTotalPrice();
+                      });
+                    },
+                    activeColor: kPrimaryColor,
                   ),
                 ],
               ),
@@ -1092,8 +1204,7 @@ class _ServiceProviderDetailsScreenState
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimaryColor,
               ),
-              onPressed: () {
-                // Create a new booking
+              onPressed: () async {
                 final TimeOfDay endTime;
                 if (isBoardingService) {
                   endTime = const TimeOfDay(hour: 17, minute: 0);
@@ -1102,47 +1213,69 @@ class _ServiceProviderDetailsScreenState
                       selectedTimeSlot.minute +
                       selectedService.duration;
                   endTime = TimeOfDay(
-                    hour: (totalMinutes ~/ 60) % 24,
-                    minute: totalMinutes % 60,
-                  );
+                      hour: (totalMinutes ~/ 60) % 24,
+                      minute: totalMinutes % 60);
                 } else {
-                  endTime = const TimeOfDay(hour: 0, minute: 0); // Fallback
+                  endTime = const TimeOfDay(hour: 0, minute: 0);
                 }
 
-                final booking = Booking(
-                  id: 'book${DateTime.now().millisecondsSinceEpoch}', // Generate unique ID
-                  userId: widget.userId,
-                  petId: selectedPetId!,
-                  serviceProviderId: widget.serviceProvider.id,
-                  serviceId: selectedServiceId!,
-                  date: selectedDate,
-                  startTime: isBoardingService
-                      ? const TimeOfDay(hour: 9, minute: 0)
-                      : timeSlots[selectedTimeSlotIndex],
-                  endTime: endTime,
-                  status: 'Confirmed',
-                  days: isBoardingService ? numberOfDays : 1,
-                  totalPrice: totalPrice,
-                );
+                final bookingDetails = {
+                  'service': selectedService.name,
+                  'provider': widget.serviceProvider.name,
+                  'date': DateFormat('yyyy-MM-dd').format(selectedDate),
+                  'time': isBoardingService
+                      ? '$numberOfDays days'
+                      : selectedTimeSlot!.format(context),
+                  'distanceFee': (widget.serviceProvider.distance ?? 0) * 3.0,
+                  'serviceCharge':
+                      (servicePrice * (isBoardingService ? numberOfDays : 1) +
+                              (widget.serviceProvider.distance ?? 0) * 3.0) *
+                          0.06,
+                  'insurance': includeInsurance ? 5.0 : 0.0,
+                };
 
-                // Call the callback to add the booking
-                if (widget.onBookingAdded != null) {
-                  widget.onBookingAdded!(booking);
-                }
-
-                Navigator.pop(context);
-                // Show confirmation
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                        'Booking confirmed! You will receive a confirmation email shortly.'),
-                    backgroundColor: Colors.green,
+                final paymentResult = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PaymentPage(
+                      bookingDetails: bookingDetails,
+                      totalAmount: totalPrice,
+                    ),
                   ),
                 );
-                // Navigate back to home
-                Navigator.pop(context);
+
+                if (paymentResult == true) {
+                  final booking = Booking(
+                    id: 'book${DateTime.now().millisecondsSinceEpoch}',
+                    userId: widget.userId,
+                    petId: selectedPetId!,
+                    serviceProviderId: widget.serviceProvider.id,
+                    serviceId: selectedServiceId!,
+                    date: selectedDate,
+                    startTime: isBoardingService
+                        ? const TimeOfDay(hour: 9, minute: 0)
+                        : timeSlots[selectedTimeSlotIndex],
+                    endTime: endTime,
+                    status: 'Confirmed',
+                    days: isBoardingService ? numberOfDays : 1,
+                    totalPrice: totalPrice,
+                  );
+
+                  if (widget.onBookingAdded != null) {
+                    widget.onBookingAdded!(booking);
+                  }
+
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Booking confirmed! Payment successful.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  Navigator.pop(context);
+                }
               },
-              child: const Text('Confirm'),
+              child: null,
             ),
           ],
         );
