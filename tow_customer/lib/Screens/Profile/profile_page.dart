@@ -111,6 +111,8 @@ class _ProfilePageState extends State<ProfilePage> {
         phoneNumber: _phoneController.text,
         imageUrl: _currentUser.imageUrl, // Will be updated in a real app
         location: _locationController.text,
+        latitude: _currentUser.latitude,
+        longitude: _currentUser.longitude,
       );
 
       // Call the callback

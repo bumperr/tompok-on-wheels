@@ -10,7 +10,7 @@ import 'package:tow_customer/class/Pet.dart';
 import 'package:tow_customer/class/Service.dart';
 import 'package:tow_customer/class/Booking.dart';
 import 'package:tow_customer/class/ServiceProvider.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 //--------------sample data----------------
 User john = User(
     id: 'johnthecatlover',
@@ -18,7 +18,9 @@ User john = User(
     email: 'john.doe@example.com',
     phoneNumber: '123-456-7890',
     imageUrl: '',
-    location: 'Seri Iskandar, Perak');
+    location: 'Seri Iskandar, Perak',
+    latitude: '4.36625924939677',
+    longitude: '100.9627464604292');
 
 String jsonData = '''
   [
@@ -79,8 +81,8 @@ final List<ServiceProvider> sampleServiceProviders = [
         'https://lh3.googleusercontent.com/gps-cs-s/AB5caB_QK5w3VibrqB-MOO-5up-FYYj0HsB10IAEq8MK-sCornca_LXokhOzhTSSFcM0Ilk9esDzAB9hg4a3geO3YMUdAAQDMVABH7yT1kpdQMqcC6W6-VPQXEyoP9IXspcsg1PDfnyy5w=w231-h193-n-k-no-nu',
     isVerified: true,
     rating: 4.7,
-    distance: 2.3,
-    travelTime: 12,
+    latitude: "4.357483743398048",
+    longitude: "100.96793361514855",
   ),
   ServiceProvider(
     id: 'groomer002',
@@ -90,8 +92,8 @@ final List<ServiceProvider> sampleServiceProviders = [
         'https://lh3.googleusercontent.com/p/AF1QipO55nbE5pyrVrTXvk8g0pOAgATg69oU02K1-Zd6=s3072-w3072-h1650-rw',
     isVerified: true,
     rating: 4.5,
-    distance: 3.7,
-    travelTime: 20,
+    latitude: "4.547843349065411",
+    longitude: "101.07180651887563",
   ),
   ServiceProvider(
     id: 'boarding003',
@@ -101,8 +103,8 @@ final List<ServiceProvider> sampleServiceProviders = [
         'https://lh3.googleusercontent.com/gps-cs-s/AB5caB9Q6QWjlhqwHEi7bpRD-NrpbBwmUZ3dCXT5k4o7lVkuwQLOJYQhX-50F0qKVW9dOZAUMXDw5ZV9SEZ3OSj9qRKgIOho7mIamDYAz9UOV79pP2VEvsh1LeA3u4EpQGwTiVNpfnRudQ=s3072-w3072-h1650-rw',
     isVerified: true,
     rating: 4.2,
-    distance: 5.5,
-    travelTime: 30,
+    latitude: "4.539687766454234",
+    longitude: " 101.00023738527386",
   ),
   ServiceProvider(
     id: 'vet004',
@@ -112,20 +114,19 @@ final List<ServiceProvider> sampleServiceProviders = [
         'https://lh3.googleusercontent.com/p/AF1QipOOP1cdW4A_kEp5EnRbbt1NrzVTSkzvqQXBAetN=s3072-w3072-h1650-rw',
     isVerified: false,
     rating: 4.0,
-    distance: 1.8,
-    travelTime: 10,
+    latitude: "4.375467335651324",
+    longitude: "100.97978114585734",
   ),
   ServiceProvider(
-    id: 'groomer005',
-    name: 'Paws & Furs Pet House',
-    category: 'Grooming',
-    logoUrl:
-        'https://lh3.googleusercontent.com/p/AF1QipOemAom3vHtawIvmTDwIAp0Qr_YQ7L5YweWlAwb=s3072-w3072-h1650-rw',
-    isVerified: true,
-    rating: 4.6,
-    distance: 4.2,
-    travelTime: 25,
-  )
+      id: 'groomer005',
+      name: 'Paws & Furs Pet House',
+      category: 'Grooming',
+      logoUrl:
+          'https://lh3.googleusercontent.com/p/AF1QipOemAom3vHtawIvmTDwIAp0Qr_YQ7L5YweWlAwb=s3072-w3072-h1650-rw',
+      isVerified: true,
+      rating: 4.6,
+      latitude: "4.583096575078939",
+      longitude: "101.06536142494797")
 ];
 
 // Sample services data for different categories
@@ -291,6 +292,8 @@ List<Booking> sampleBookings = [
   )
 ];
 
+// Create a function to calculate and sort service providers
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -303,6 +306,24 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   late List<Pet> pets;
   late User currentUser;
+
+void _initializeServiceProviders() async {
+  final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
+
+  // Ensure we wait for all distance updates before continuing
+  await Future.wait(sampleServiceProviders.map((provider) async {
+    await provider.updateDistanceAndTravelTime(currentUser, apiKey);
+  }));
+
+  // Sort providers by updated distance
+  sampleServiceProviders.sort((a, b) => (a.distance ?? double.infinity)
+      .compareTo(b.distance ?? double.infinity));
+
+  // Force UI refresh after async operations
+  if (mounted) {
+    setState(() {});
+  }
+}
 
   @override
   void initState() {
@@ -318,6 +339,8 @@ class _HomePageState extends State<HomePage> {
     for (int i = 0; i < pets.length; i++) {
       pets[i].id = 'pet${i + 1}';
     }
+
+    _initializeServiceProviders();
   }
 
   // Add new pet
