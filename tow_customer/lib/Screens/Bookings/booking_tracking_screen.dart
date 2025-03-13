@@ -6,18 +6,21 @@ import 'package:tow_customer/class/ServiceProvider.dart';
 import 'package:tow_customer/constants.dart';
 import 'package:tow_customer/Screens/Bookings/message_page.dart';
 import 'package:intl/intl.dart';
+import 'package:tow_customer/Screens/Home/home.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 
 class BookingTrackingScreen extends StatefulWidget {
   final Booking booking;
   final Pet pet;
   final ServiceProvider serviceProvider;
 
-  const BookingTrackingScreen({
-    Key? key,
-    required this.booking,
-    required this.pet,
-    required this.serviceProvider,
-  }) : super(key: key);
+  const BookingTrackingScreen(
+      {Key? key,
+      required this.booking,
+      required this.pet,
+      required this.serviceProvider})
+      : super(key: key);
 
   @override
   _BookingTrackingScreenState createState() => _BookingTrackingScreenState();
@@ -26,11 +29,10 @@ class BookingTrackingScreen extends StatefulWidget {
 class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
   late GoogleMapController _mapController;
 
-  // Simulated tracking data (to be replaced with real GPS tracking)
-  final LatLng _currentLocation =
-      const LatLng(4.2105, 101.9758); // Example location in Malaysia
-  final LatLng _pickupLocation = const LatLng(4.2100, 101.9750);
-  final LatLng _dropoffLocation = const LatLng(4.2110, 101.9765);
+  // Location variables using real coordinates
+  late LatLng _userLocation;
+  late LatLng _storeLocation;
+  late LatLng _driverLocation;
 
   final List<TrackingStep> _trackingSteps = [
     TrackingStep(
@@ -48,20 +50,20 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
     TrackingStep(
       title: 'En Route to Pickup',
       description: 'Driver is on the way to pick up your pet',
-      isCompleted: false,
-      timestamp: null,
+      isCompleted: true,
+      timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
     ),
     TrackingStep(
       title: 'Pet Pickup',
       description: 'Pet picked up and journey started',
-      isCompleted: false,
-      timestamp: null,
+      isCompleted: true,
+      timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
     ),
     TrackingStep(
       title: 'En Route to Destination',
       description: 'Traveling to the destination',
-      isCompleted: false,
-      timestamp: null,
+      isCompleted: true,
+      timestamp: DateTime.now(),
     ),
     TrackingStep(
       title: 'Destination Reached',
@@ -69,31 +71,34 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
       isCompleted: false,
       timestamp: null,
     ),
-    TrackingStep(
-      title: 'En Route To Pickup',
-      description: 'Drive is on the way to pick up your pet at store',
-      isCompleted: false,
-      timestamp: null,
-    ),
-    TrackingStep(
-      title: 'Pet Pickup',
-      description: 'Your pet picked up from store',
-      isCompleted: false,
-      timestamp: null,
-    ),
-    TrackingStep(
-      title: 'En Route to Pickup Point',
-      description: 'Travelling to the pickup point',
-      isCompleted: false,
-      timestamp: null,
-    ),
-    TrackingStep(
-      title: 'Destination Reached',
-      description: 'Pet safely delivered to the destination',
-      isCompleted: false,
-      timestamp: null,
-    ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize locations with real coordinates
+    try {
+      _userLocation =
+          LatLng(double.parse(john.latitude), double.parse(john.longitude));
+    } catch (e) {
+      // Fallback if parsing fails
+      _userLocation = const LatLng(4.3662, 100.9627);
+    }
+
+    // Get service provider location with fallback
+    _storeLocation = widget.serviceProvider.coordinates ??
+        const LatLng(
+            4.5478, 101.0718); // Fallback for MizGroomers from sample data
+
+    // Place driver at 70% of the way from store to user (for demo purposes)
+    _driverLocation = LatLng(
+      _storeLocation.latitude +
+          (_userLocation.latitude - _storeLocation.latitude) * 0.7,
+      _storeLocation.longitude +
+          (_userLocation.longitude - _storeLocation.longitude) * 0.7,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,34 +157,65 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
   Widget _buildMapView() {
     return GoogleMap(
       initialCameraPosition: CameraPosition(
-        target: _currentLocation,
+        target: _driverLocation, // Center map on driver's current location
         zoom: 14,
       ),
       markers: {
+        // User location marker (red)
         Marker(
-          markerId: const MarkerId('current_location'),
-          position: _currentLocation,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: 'Current Location'),
+          markerId: const MarkerId('user_location'),
+          position: _userLocation,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: const InfoWindow(title: 'Your Location'),
         ),
+        // Store location marker (green)
         Marker(
-          markerId: const MarkerId('pickup_location'),
-          position: _pickupLocation,
+          markerId: const MarkerId('store_location'),
+          position: _storeLocation,
           icon:
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          infoWindow: const InfoWindow(title: 'Pickup Location'),
+          infoWindow: InfoWindow(title: widget.serviceProvider.name),
         ),
+        // Driver location marker (blue)
         Marker(
-          markerId: const MarkerId('dropoff_location'),
-          position: _dropoffLocation,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: const InfoWindow(title: 'Dropoff Location'),
+          markerId: const MarkerId('driver_location'),
+          position: _driverLocation,
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          infoWindow: const InfoWindow(title: 'Driver Location'),
+        ),
+      },
+      polylines: {
+        // Polyline showing the route from driver to user
+        Polyline(
+          polylineId: const PolylineId('driver_to_user'),
+          points: [_driverLocation, _userLocation],
+          color: Colors.blue,
+          width: 5,
+        ),
+        // Polyline showing the route already traveled
+        Polyline(
+          polylineId: const PolylineId('store_to_driver'),
+          points: [_storeLocation, _driverLocation],
+          color: Colors.grey,
+          width: 5,
         ),
       },
       onMapCreated: (controller) {
         _mapController = controller;
       },
+      // Enable gestures for map interaction
+      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+        Factory<OneSequenceGestureRecognizer>(
+          () => EagerGestureRecognizer(),
+        ),
+      },
+      // Enable all map interactions
+      zoomControlsEnabled: true,
+      zoomGesturesEnabled: true,
+      scrollGesturesEnabled: true,
+      rotateGesturesEnabled: true,
+      tiltGesturesEnabled: true,
     );
   }
 
