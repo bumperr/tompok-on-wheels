@@ -4,7 +4,7 @@ import 'package:tow_customer/class/Booking.dart';
 import 'package:tow_customer/class/Pet.dart';
 import 'package:tow_customer/class/ServiceProvider.dart';
 import 'package:tow_customer/constants.dart';
-
+import 'package:tow_customer/Screens/Bookings/message_page.dart';
 import 'package:intl/intl.dart';
 
 class BookingTrackingScreen extends StatefulWidget {
@@ -66,6 +66,30 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
     TrackingStep(
       title: 'Destination Reached',
       description: 'Pet safely delivered',
+      isCompleted: false,
+      timestamp: null,
+    ),
+    TrackingStep(
+      title: 'En Route To Pickup',
+      description: 'Drive is on the way to pick up your pet at store',
+      isCompleted: false,
+      timestamp: null,
+    ),
+    TrackingStep(
+      title: 'Pet Pickup',
+      description: 'Your pet picked up from store',
+      isCompleted: false,
+      timestamp: null,
+    ),
+    TrackingStep(
+      title: 'En Route to Pickup Point',
+      description: 'Travelling to the pickup point',
+      isCompleted: false,
+      timestamp: null,
+    ),
+    TrackingStep(
+      title: 'Destination Reached',
+      description: 'Pet safely delivered to the destination',
       isCompleted: false,
       timestamp: null,
     ),
@@ -344,7 +368,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
                 const CircleAvatar(
                   radius: 30,
                   backgroundImage: NetworkImage(
-                    'https://example.com/driver-avatar.jpg',
+                    'https://static.vecteezy.com/system/resources/previews/035/814/962/large_2x/ai-generated-of-young-asian-engineer-man-handsome-smiling-in-orange-vest-factory-worker-ai-generated-free-photo.jpg',
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -353,7 +377,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'John Doe',
+                        'Sobri Hashim',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -370,6 +394,22 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
                   icon: const Icon(Icons.phone_rounded, color: kPrimaryColor),
                   onPressed: () {
                     // Implement phone call functionality
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.message_rounded, color: kPrimaryColor),
+                  onPressed: () {
+                    // Implement messaging functionality
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MessagingScreen(
+                          driverName: 'Sobri Hashim',
+                          driverImage:
+                              'https://static.vecteezy.com/system/resources/previews/035/814/962/large_2x/ai-generated-of-young-asian-engineer-man-handsome-smiling-in-orange-vest-factory-worker-ai-generated-free-photo.jpg',
+                        ),
+                      ),
+                    );
                   },
                 ),
               ],

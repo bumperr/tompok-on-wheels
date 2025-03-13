@@ -157,7 +157,7 @@ class _ServiceProviderDetailsScreenState
           : servicePrice;
 
       double distanceFee =
-          (widget.serviceProvider.distance ?? 0) * 3.0; // 3 RM per KM
+          (widget.serviceProvider.distance ?? 0) * 5.0; // 3 RM per KM
       double subtotal = basePrice + distanceFee;
       double serviceCharge = subtotal * 0.06; // 6% service charge
       totalPrice = subtotal + serviceCharge + (includeInsurance ? 5.0 : 0.0);
@@ -920,7 +920,7 @@ class _ServiceProviderDetailsScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Distance Fee (RM 3/km)'),
+                      const Text('Distance Fee (RM 5/km)'),
                       Text(
                           'RM ${(widget.serviceProvider.distance != null ? widget.serviceProvider.distance! * 3.0 : 0.0).toStringAsFixed(2)}'),
                     ],
@@ -1275,7 +1275,7 @@ class _ServiceProviderDetailsScreenState
                   Navigator.pop(context);
                 }
               },
-              child: null,
+              child: const Text('Proceed to Payment'),
             ),
           ],
         );

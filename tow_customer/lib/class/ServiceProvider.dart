@@ -112,8 +112,6 @@ class ServiceProvider {
 
       final response =
           await http.post(Uri.parse(url), headers: headers, body: body);
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
