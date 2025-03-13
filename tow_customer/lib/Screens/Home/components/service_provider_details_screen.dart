@@ -159,7 +159,7 @@ class _ServiceProviderDetailsScreenState
       double distanceFee =
           (widget.serviceProvider.distance ?? 0) * 5.0; // 3 RM per KM
       double subtotal = basePrice + distanceFee;
-      double serviceCharge = subtotal * 0.06; // 6% service charge
+      double serviceCharge = subtotal + 30; // 6% service charge
       totalPrice = subtotal + serviceCharge + (includeInsurance ? 5.0 : 0.0);
     }
   }
@@ -175,27 +175,6 @@ class _ServiceProviderDetailsScreenState
       return selectedTimeSlotIndex >=
           0; // For other services, we need a time slot
     }
-  }
-
-// Helper methods for price calculations
-  double calculateServiceFee(Map<String, dynamic> service) {
-    // Return the price from the service
-    return service['price'] ?? 0.0;
-  }
-
-  double calculateTompokkerFee(double distance) {
-    // RM 3 per km
-    return distance * 3.0;
-  }
-
-  double calculateSoftwareServiceCharge(double subtotal) {
-    // 5% platform fee (typical for Malaysian service apps)
-    return subtotal * 0.05;
-  }
-
-  double calculateTax(double subtotal) {
-    // 6% service tax in Malaysia (SST)
-    return subtotal * 0.06;
   }
 
   @override
@@ -929,7 +908,7 @@ class _ServiceProviderDetailsScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Service Charge (6%)'),
+                      const Text('Base Rate (RM 30)'),
                       Text(
                           'RM ${((servicePrice * (isBoardingService ? numberOfDays : 1) + (widget.serviceProvider.distance ?? 0) * 3.0) * 0.06).toStringAsFixed(2)}'),
                     ],
