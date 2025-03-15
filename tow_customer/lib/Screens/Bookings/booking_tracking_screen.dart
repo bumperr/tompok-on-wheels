@@ -56,13 +56,13 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
     TrackingStep(
       title: 'Pet Pickup',
       description: 'Pet picked up and journey started',
-      isCompleted: true,
+      isCompleted: false,
       timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
     ),
     TrackingStep(
       title: 'En Route to Destination',
       description: 'Traveling to the destination',
-      isCompleted: true,
+      isCompleted: false,
       timestamp: DateTime.now(),
     ),
     TrackingStep(
