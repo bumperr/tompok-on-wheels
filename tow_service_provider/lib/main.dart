@@ -3,7 +3,7 @@ import 'package:tow_service_provider/constants.dart';
 import 'package:tow_service_provider/routes.dart';
 import 'package:tow_service_provider/screens/auth/login_screen.dart';
 import 'package:tow_service_provider/screens/dashboard/dashboard_screen.dart';
-import 'package:tow_service_provider/services/auth_service.dart';
+import 'package:tow_service_provider/screens/service/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:google_fonts/google_fonts.dart';

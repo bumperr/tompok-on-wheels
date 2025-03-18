@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tow_service_provider/constants.dart';
 import 'package:tow_service_provider/routes.dart';
-import 'package:tow_service_provider/services/auth_service.dart';
+import 'package:tow_service_provider/screens/service/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class SidebarMenu extends StatefulWidget {
