@@ -1,0 +1,88 @@
+tow_provider_web/
+│
+├── assets/
+│   ├── images/
+│   │   ├── logo.png
+│   │   └── provider_placeholder.png
+│   └── icons/
+│       └── app_icon.png
+│
+├── lib/
+│   ├── main.dart                   # App entry point
+│   ├── constants.dart              # App-wide constants
+│   ├── routes.dart                 # App navigation routes
+│   │
+│   ├── models/                     # Data models
+│   │   ├── service_provider.dart   # Service provider profile
+│   │   ├── service.dart            # Services offered
+│   │   ├── booking.dart            # Booking information
+│   │   ├── pet.dart                # Pet information
+│   │   ├── customer.dart           # Customer information
+│   │   ├── driver.dart             # Driver information
+│   │   ├── transaction.dart        # Financial transactions
+│   │   └── user.dart               # User account information
+│   │
+│   ├── services/                   # API and data services
+│   │   ├── auth_service.dart       # Authentication service
+│   │   ├── booking_service.dart    # Booking management
+│   │   ├── pet_service.dart        # Pet data service
+│   │   ├── customer_service.dart   # Customer data service
+│   │   ├── analytics_service.dart  # Business analytics
+│   │   └── chat_service.dart       # Messaging service
+│   │
+│   ├── utils/                      # Utility functions
+│   │   ├── date_formatter.dart     # Date/time formatting
+│   │   ├── validators.dart         # Form validation
+│   │   └── responsive_helper.dart  # Responsive UI helpers
+│   │
+│   ├── widgets/                    # Reusable widgets
+│   │   ├── sidebar_menu.dart       # App navigation sidebar
+│   │   ├── booking_card.dart       # Booking display card
+│   │   ├── pet_info_card.dart      # Pet information card
+│   │   ├── stats_card.dart         # Analytics display card
+│   │   ├── service_card.dart       # Service display card
+│   │   ├── calendar_widget.dart    # Booking calendar
+│   │   └── dialogs/
+│   │       ├── booking_dialog.dart # Booking details dialog
+│   │       └── service_dialog.dart # Service edit dialog
+│   │
+│   └── screens/                    # App screens
+│       ├── auth/
+│       │   ├── login_screen.dart
+│       │   └── register_screen.dart
+│       │
+│       ├── dashboard/
+│       │   ├── dashboard_screen.dart     # Main dashboard
+│       │   └── analytics_screen.dart     # Business analytics
+│       │
+│       ├── bookings/
+│       │   ├── bookings_screen.dart      # All bookings view
+│       │   ├── booking_details.dart      # Single booking details
+│       │   └── calendar_view.dart        # Calendar view of bookings
+│       │
+│       ├── services/
+│       │   ├── services_screen.dart      # Service management
+│       │   └── service_form.dart         # Add/edit service form
+│       │
+│       ├── pets/
+│       │   ├── pets_screen.dart          # All pets view
+│       │   └── pet_details.dart          # Single pet details
+│       │
+│       ├── customers/
+│       │   ├── customers_screen.dart     # All customers view
+│       │   └── customer_details.dart     # Single customer details
+│       │
+│       ├── chat/
+│       │   ├── chat_list.dart            # List of conversations
+│       │   └── chat_screen.dart          # Conversation view
+│       │
+│       ├── finances/
+│       │   ├── finances_screen.dart      # Financial overview
+│       │   └── transactions.dart         # Transaction history
+│       │
+│       └── settings/
+│           ├── settings_screen.dart      # App settings
+│           ├── profile_settings.dart     # Business profile
+│           └── user_settings.dart        # User account settings
+│
+└── pubspec.yaml                    # Project dependencies
