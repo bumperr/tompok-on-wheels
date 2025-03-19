@@ -5,7 +5,7 @@ import 'package:tow_driver/class/driver.dart';
 import 'package:tow_driver/class/transaction.dart';
 import 'package:tow_driver/screens/wallet/components/earnings_card.dart';
 import 'package:tow_driver/screens/wallet/components/transaction_list.dart';
-import 'package:tow_driver/screens/wallet/components/withdraw_funds_dialog.dart';
+//import 'package:tow_driver/screens/wallet/components/withdraw_funds_dialog.dart';
 import 'package:intl/intl.dart';
 
 class WalletPage extends StatefulWidget {
@@ -22,10 +22,11 @@ class WalletPage extends StatefulWidget {
   _WalletPageState createState() => _WalletPageState();
 }
 
-class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateMixin {
+class _WalletPageState extends State<WalletPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final List<String> _tabs = ['All', 'Earnings', 'Withdrawals'];
-  
+
   // Transaction filter state
   String _selectedFilter = 'All';
 
@@ -44,31 +45,86 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
   List<Transaction> _filterTransactions(String filter) {
     switch (filter) {
       case 'Earnings':
-        return widget.transactions.where((transaction) => 
-          transaction.type == TransactionType.tripPayment || 
-          transaction.type == TransactionType.bonus).toList();
+        return widget.transactions
+            .where((transaction) =>
+                transaction.type == TransactionType.tripPayment ||
+                transaction.type == TransactionType.bonus)
+            .toList();
       case 'Withdrawals':
-        return widget.transactions.where((transaction) => 
-          transaction.type == TransactionType.withdrawal).toList();
+        return widget.transactions
+            .where(
+                (transaction) => transaction.type == TransactionType.withdrawal)
+            .toList();
       default:
         return widget.transactions;
     }
   }
 
   void _showWithdrawDialog() {
+    final TextEditingController amountController = TextEditingController();
+    final availableBalance = widget.driver.earnings;
+
     showDialog(
       context: context,
-      builder: (context) => WithdrawFundsDialog(
-        availableBalance: widget.driver.earnings,
-        onWithdraw: (amount) {
-          // In a real app, this would call an API to withdraw funds
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Withdrawal request of RM${amount.toStringAsFixed(2)} submitted'),
-              backgroundColor: Colors.green,
+      builder: (context) => AlertDialog(
+        title: const Text('Withdraw Funds'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Available Balance: RM${availableBalance.toStringAsFixed(2)}'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Amount',
+                prefixText: 'RM',
+                border: OutlineInputBorder(),
+              ),
             ),
-          );
-        },
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () {
+              final amount = double.tryParse(amountController.text) ?? 0.0;
+              if (amount <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a valid amount'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+              if (amount > availableBalance) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Insufficient balance'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+
+              // In a real app, this would call an API to withdraw funds
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      'Withdrawal request of RM${amount.toStringAsFixed(2)} submitted'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text('WITHDRAW'),
+          ),
+        ],
       ),
     );
   }
@@ -101,7 +157,7 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
             weeklyEarnings: _calculateWeeklyEarnings(),
             onWithdraw: _showWithdrawDialog,
           ),
-          
+
           // Transactions list
           Expanded(
             child: TransactionList(
@@ -118,12 +174,13 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
     // Calculate earnings for the current week
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final startOfWeekDate = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
-    
+    final startOfWeekDate =
+        DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+
     return widget.transactions
-        .where((transaction) => 
-            (transaction.type == TransactionType.tripPayment || 
-             transaction.type == TransactionType.bonus) && 
+        .where((transaction) =>
+            (transaction.type == TransactionType.tripPayment ||
+                transaction.type == TransactionType.bonus) &&
             transaction.timestamp.isAfter(startOfWeekDate))
         .fold(0, (sum, transaction) => sum + transaction.amount);
   }
@@ -140,8 +197,9 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
 
   Widget _buildTransactionDetails(Transaction transaction) {
     // Format date for display
-    final formattedDate = DateFormat('EEEE, MMMM d, yyyy • h:mm a').format(transaction.timestamp);
-    
+    final formattedDate =
+        DateFormat('EEEE, MMMM d, yyyy • h:mm a').format(transaction.timestamp);
+
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -151,7 +209,8 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: _getTransactionColor(transaction.type).withOpacity(0.2),
+                backgroundColor:
+                    _getTransactionColor(transaction.type).withOpacity(0.2),
                 child: Icon(
                   _getTransactionIcon(transaction.type),
                   color: _getTransactionColor(transaction.type),
@@ -189,17 +248,19 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
             ),
           ),
           const SizedBox(height: 16),
-          _buildDetailRow('Transaction ID', '#${transaction.id.substring(0, 8)}'),
+          _buildDetailRow(
+              'Transaction ID', '#${transaction.id.substring(0, 8)}'),
           const SizedBox(height: 8),
-          _buildDetailRow('Amount', 
-              'RM ${transaction.amount.abs().toStringAsFixed(2)}',
+          _buildDetailRow(
+              'Amount', 'RM ${transaction.amount.abs().toStringAsFixed(2)}',
               valueColor: transaction.amount > 0 ? Colors.green : Colors.red),
           const SizedBox(height: 8),
-          _buildDetailRow('Status', transaction.isCompleted ? 'Completed' : 'Pending',
-              valueColor: transaction.isCompleted ? Colors.green : Colors.orange),
+          _buildDetailRow(
+              'Status', transaction.isCompleted ? 'Completed' : 'Pending',
+              valueColor:
+                  transaction.isCompleted ? Colors.green : Colors.orange),
           const SizedBox(height: 8),
           _buildDetailRow('Description', transaction.description),
-          
           if (transaction.tripId != null) ...[
             const SizedBox(height: 16),
             OutlinedButton.icon(
@@ -208,7 +269,8 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
               style: OutlinedButton.styleFrom(
                 foregroundColor: kPrimaryColor,
                 side: BorderSide(color: kPrimaryColor),
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

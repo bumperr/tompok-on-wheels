@@ -232,7 +232,7 @@ List<Transaction> sampleTransactions = [
     type: TransactionType.tripPayment,
     amount: 56.0,
     timestamp: DateTime.now().subtract(const Duration(days: 2)),
-    description: 'Payment for trip to Nadin Animal Clinic',
+    description: 'Tips given for trip  to Nadin Animal Clinic',
     isCompleted: true,
   ),
   Transaction(
@@ -262,7 +262,7 @@ List<Transaction> sampleTransactions = [
     type: TransactionType.tripPayment,
     amount: 45.0,
     timestamp: DateTime.now(),
-    description: 'Payment for trip to Miz Groomers',
+    description: 'Tips given for trip  to Miz Groomers',
     isCompleted: false,
   ),
 ];
