@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 import '../../../constants.dart';
 
 class WelcomeImage extends StatelessWidget {
@@ -24,7 +23,7 @@ class WelcomeImage extends StatelessWidget {
             Expanded(
               flex: 8,
               child: Image.asset(
-                "assets/icons/welcomepage.jpg",
+                "assets/icons/tow.png",
               ),
             ),
             const Spacer(),

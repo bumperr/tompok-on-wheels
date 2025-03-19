@@ -41,6 +41,10 @@ class _ServiceProviderDetailsScreenState
   double servicePrice = 0.0;
   double totalPrice = 0.0;
   bool includeInsurance = false; // Add this line for insurance option
+  bool includeCatBed = false;
+  bool includeCatNip = false;
+  bool priorityDrive = false;
+  double tipAmount = 0.0;
   // Sample data for services if not provided
   late List<Service> _services;
 
@@ -146,6 +150,62 @@ class _ServiceProviderDetailsScreenState
     return slots;
   }
 
+  void _showCustomTipDialog() {
+    final TextEditingController tipController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter Custom Tip'),
+          content: TextField(
+            controller: tipController,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              hintText: 'Enter tip amount',
+              prefixText: 'RM ',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Validate input
+                double? customTip = double.tryParse(tipController.text);
+                if (customTip != null && customTip >= 0) {
+                  setState(() {
+                    tipAmount = customTip;
+                    _updateTotalPrice();
+                  });
+                  Navigator.of(context).pop();
+                } else {
+                  // Show error if input is invalid
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please enter a valid tip amount')),
+                  );
+                }
+              },
+              child: Text('Add Tip'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+// Helper method to format distance
+  String _formatDistance(double? distance) {
+    return distance != null ? (distance * 2).toStringAsFixed(2) : '0.00';
+  }
+
+// Helper method to calculate distance fee
+  double _calculateDistanceFee(double? distance) {
+    return distance != null ? distance * 2 * 10.0 : 0.0;
+  }
+
   void _updateTotalPrice() {
     if (selectedServiceId != null) {
       final selectedService =
@@ -156,11 +216,26 @@ class _ServiceProviderDetailsScreenState
           ? servicePrice * numberOfDays
           : servicePrice;
 
-      double distanceFee =
-          (widget.serviceProvider.distance ?? 0) * 5.0; // 3 RM per KM
-      double subtotal = basePrice + distanceFee;
-      double serviceCharge = subtotal + 30; // 6% service charge
-      totalPrice = subtotal + serviceCharge + (includeInsurance ? 5.0 : 0.0);
+      // Base rate
+      double totalBaseRate = 30.0;
+
+      // Distance fee (round trip calculation)
+      double distanceFee = (widget.serviceProvider.distance ?? 0) *
+          20.0; // 10 RM per KM (send/return)
+
+      // Add-ons
+      double addOns = 0.0;
+      if (includeInsurance) addOns += 10.0;
+      if (includeCatBed) addOns += 10.0;
+      if (includeCatNip) addOns += 5.0;
+      if (priorityDrive) addOns += 30.0;
+
+      // Calculate subtotal
+      double subtotal =
+          basePrice + totalBaseRate + distanceFee + addOns + tipAmount;
+
+      // Final total price
+      totalPrice = subtotal;
     }
   }
 
@@ -682,7 +757,7 @@ class _ServiceProviderDetailsScreenState
             ),
           ),
 
-          // Boarding days selection (only show if boarding service is selected)
+          // // Boarding days selection (only show if boarding service is selected)
           if (isBoardingService) ...[
             const SizedBox(height: 20),
             Card(
@@ -860,7 +935,221 @@ class _ServiceProviderDetailsScreenState
             ),
 
           const SizedBox(height: 20),
+          //Add-ons
+          Card(
+            elevation: 4,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  // Insurance
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.shield, color: kPrimaryColor),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Insurance Coverage',
+                                style: TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text('RM 10.00',
+                              style: TextStyle(color: Colors.grey)),
+                          Switch(
+                            value: includeInsurance,
+                            onChanged: (value) {
+                              setState(() {
+                                includeInsurance = value;
+                                _updateTotalPrice();
+                              });
+                            },
+                            activeColor: kPrimaryColor,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
 
+                  const Divider(),
+
+                  // Cat Bed
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.bed, color: kPrimaryColor),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Cat Bed',
+                                style: TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text('RM 10.00',
+                              style: TextStyle(color: Colors.grey)),
+                          Switch(
+                            value: includeCatBed,
+                            onChanged: (value) {
+                              setState(() {
+                                includeCatBed = value;
+                                _updateTotalPrice();
+                              });
+                            },
+                            activeColor: kPrimaryColor,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const Divider(),
+
+                  //Cat Nip / Cat Toys
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.toys, color: kPrimaryColor),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Cat Nip / Toys',
+                                style: TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text('RM 5.00', style: TextStyle(color: Colors.grey)),
+                          Switch(
+                            value: includeCatNip,
+                            onChanged: (value) {
+                              setState(() {
+                                includeCatNip = value;
+                                _updateTotalPrice();
+                              });
+                            },
+                            activeColor: kPrimaryColor,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const Divider(),
+
+                  //Priority Drive
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.speed, color: kPrimaryColor),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Priority Drive',
+                                style: TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text('RM 30.00',
+                              style: TextStyle(color: Colors.grey)),
+                          Switch(
+                            value: priorityDrive,
+                            onChanged: (value) {
+                              setState(() {
+                                priorityDrive = value;
+                                _updateTotalPrice();
+                              });
+                            },
+                            activeColor: kPrimaryColor,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const Divider(),
+
+                  // Tip for Driver
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.monetization_on, color: kPrimaryColor),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Tip for Driver',
+                                style: TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text('Custom Tip',
+                              style: TextStyle(color: Colors.grey)),
+                          Switch(
+                            value: tipAmount > 0,
+                            onChanged: (value) {
+                              if (value) {
+                                // Show dialog to enter custom tip
+                                _showCustomTipDialog();
+                              } else {
+                                setState(() {
+                                  tipAmount = 0.0;
+                                  _updateTotalPrice();
+                                });
+                              }
+                            },
+                            activeColor: kPrimaryColor,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
           // Price summary
           Card(
             elevation: 4,
@@ -877,6 +1166,7 @@ class _ServiceProviderDetailsScreenState
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
+                  // Service Fee
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -895,31 +1185,118 @@ class _ServiceProviderDetailsScreenState
                       ],
                     ),
                   ],
+                  // Base Rate
                   const SizedBox(height: 4),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Distance Fee (RM 5/km)'),
-                      Text(
-                          'RM ${(widget.serviceProvider.distance != null ? widget.serviceProvider.distance! * 3.0 : 0.0).toStringAsFixed(2)}'),
+                      Text('Base Rate'),
+                      Text('RM 30.00'),
                     ],
                   ),
+                  //Distance show
+                  // const SizedBox(height: 4),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //   children: [
+                  //     const Text('Distance (Round Trip)'),
+                  //     Text(
+                  //         ' ${(widget.serviceProvider.distance != null ? (widget.serviceProvider.distance! * 2).toStringAsFixed(2) : '0.00')} km'),
+                  //   ],
+                  // ),
+                  //Price per km
+
+                  // const SizedBox(height: 4),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //   children: [
+                  //     const Text('RM 10 per km'),
+                  //     Text('RM 10.00'),
+                  //   ],
+                  // ),
+
+                  // Distance Fee
                   const SizedBox(height: 4),
                   Row(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.end, // Aligns children to the bottom
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Base Rate (RM 30)'),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            const TextSpan(
+                              text: 'Distance Fee=',
+                              style: TextStyle(fontWeight: FontWeight.normal),
+                            ),
+                            TextSpan(
+                              text:
+                                  '${_formatDistance(widget.serviceProvider.distance)} km',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const TextSpan(
+                              text: ' x RM 10',
+                              style: TextStyle(fontWeight: FontWeight.normal),
+                            ),
+                          ],
+                        ),
+                      ),
                       Text(
-                          'RM ${((servicePrice * (isBoardingService ? numberOfDays : 1) + (widget.serviceProvider.distance ?? 0) * 3.0) * 0.06).toStringAsFixed(2)}'),
+                        'RM ${_calculateDistanceFee(widget.serviceProvider.distance).toStringAsFixed(2)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
+
+                  // Add-ons
                   if (includeInsurance) ...[
+                    const SizedBox(height: 4),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Insurance Coverage'),
+                        Text('RM 10.00'),
+                      ],
+                    ),
+                  ],
+                  if (includeCatBed) ...[
+                    const SizedBox(height: 4),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Cat Bed'),
+                        Text('RM 10.00'),
+                      ],
+                    ),
+                  ],
+                  if (includeCatNip) ...[
+                    const SizedBox(height: 4),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Cat Nip / Toys'),
+                        Text('RM 5.00'),
+                      ],
+                    ),
+                  ],
+                  if (priorityDrive) ...[
+                    const SizedBox(height: 4),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Priority Drive'),
+                        Text('RM 30.00'),
+                      ],
+                    ),
+                  ],
+                  if (tipAmount > 0) ...[
                     const SizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Insurance'),
-                        const Text('RM 5.00'),
+                        const Text('Tip for Tompokker'),
+                        Text('RM ${tipAmount.toStringAsFixed(2)}'),
                       ],
                     ),
                   ],
@@ -941,36 +1318,6 @@ class _ServiceProviderDetailsScreenState
           ),
 
           const SizedBox(height: 20),
-
-          Card(
-            elevation: 4,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Add Insurance (RM 5.00)',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Switch(
-                    value: includeInsurance,
-                    onChanged: (value) {
-                      setState(() {
-                        includeInsurance = value;
-                        _updateTotalPrice();
-                      });
-                    },
-                    activeColor: kPrimaryColor,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 30),
 
           SizedBox(
             width: double.infinity,
@@ -1205,12 +1552,13 @@ class _ServiceProviderDetailsScreenState
                   'time': isBoardingService
                       ? '$numberOfDays days'
                       : selectedTimeSlot!.format(context),
-                  'distanceFee': (widget.serviceProvider.distance ?? 0) * 3.0,
-                  'serviceCharge':
-                      (servicePrice * (isBoardingService ? numberOfDays : 1) +
-                              (widget.serviceProvider.distance ?? 0) * 3.0) *
-                          0.06,
-                  'insurance': includeInsurance ? 5.0 : 0.0,
+                  'baseRate': 30.0,
+                  'distanceFee': (widget.serviceProvider.distance ?? 0) * 20.0,
+                  'insurance': includeInsurance ? 10.0 : 0.0,
+                  'catBed': includeCatBed ? 10.0 : 0.0,
+                  'catNip': includeCatNip ? 5.0 : 0.0,
+                  'priorityDrive': priorityDrive ? 30.0 : 0.0,
+                  'tip': tipAmount,
                 };
 
                 final paymentResult = await Navigator.push(

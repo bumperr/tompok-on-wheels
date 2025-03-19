@@ -1,4 +1,3 @@
-
 // lib/screens/profile/components/vehicle_info_section.dart
 import 'package:flutter/material.dart';
 import 'package:tow_driver/constants.dart';
@@ -7,7 +6,7 @@ import 'package:tow_driver/class/driver.dart';
 class VehicleInfoSection extends StatelessWidget {
   final Driver driver;
   final bool isEditing;
-  
+
   const VehicleInfoSection({
     Key? key,
     required this.driver,
@@ -54,7 +53,7 @@ class VehicleInfoSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 image: const DecorationImage(
                   image: NetworkImage(
-                    'https://www.toyota.com.my/vehicles/hiace/assets/images/features/hiace-feature-1.jpg',
+                    'https://img.rnudah.com/grids/29/2921082678327195655.jpg',
                   ),
                   fit: BoxFit.cover,
                 ),

@@ -119,19 +119,6 @@ class _ProfilePageState extends State<ProfilePage> {
             expandedHeight: 200.0,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                _isEditing ? 'Edit Profile' : 'Profile',
-                style: const TextStyle(
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 10.0,
-                      color: Colors.black45,
-                      offset: Offset(1.0, 1.0),
-                    ),
-                  ],
-                ),
-              ),
               background: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -159,7 +146,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   backgroundColor: Colors.white,
                                   radius: 20,
                                   child: IconButton(
-                                    icon: const Icon(Icons.camera_alt, color: kPrimaryColor),
+                                    icon: const Icon(Icons.camera_alt,
+                                        color: kPrimaryColor),
                                     onPressed: _showImageSourceActionSheet,
                                   ),
                                 ),
@@ -193,7 +181,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: widget.driver.isVerified
                                     ? Colors.green

@@ -12,16 +12,16 @@ buang insurance section
 
 per trip:- 30
 1km :-10 ringgit (6 km per trip) 
-insurance: 10 ringgit 
-
+insurance(add -on _: 10 ringgit 
+(tompokker tip jar?)
 
 
 add-on:
 
 priority drive -: 30 
 cat bed-: 10
-cat nip ( not for veterinary visit, only for grooming) :- 2 
+cat nip ( not for veterinary visit, only for grooming) :- 5
 
 buang wallet gateway 
-
+(tompokker takde wallet )
 insurance under pets (sapa oyen) (kita insurance deadline )( page insurance ) 

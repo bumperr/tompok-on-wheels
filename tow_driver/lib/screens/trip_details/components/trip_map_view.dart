@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:tow_driver/class/trip.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
 
 class TripMapView extends StatefulWidget {
   final LatLng pickupLatLng;
@@ -23,9 +25,43 @@ class TripMapView extends StatefulWidget {
 
 class _TripMapViewState extends State<TripMapView> {
   //late GoogleMapController _mapController;
+  // custom marker
+  late BitmapDescriptor _userMarker;
+  late BitmapDescriptor _storeMarker;
+  late BitmapDescriptor _driverMarker;
+
+  // ignore: unused_field
+  bool _isMarkersInitialized = false;
+
+  //initialize the marker
+  Future<BitmapDescriptor> getResizedMarker(String assetPath, int width) async {
+    ByteData data = await rootBundle.load(assetPath);
+    ui.Codec codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetWidth: width, // Set desired width (height auto scales)
+    );
+    ui.FrameInfo frameInfo = await codec.getNextFrame();
+    ByteData? byteData =
+        await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    Uint8List resizedImageBytes = byteData!.buffer.asUint8List();
+
+    return BitmapDescriptor.fromBytes(resizedImageBytes);
+  }
+
+  Future<void> _initCustomMarkers() async {
+    _userMarker = await getResizedMarker('assets/markers/user_marker.png', 100);
+    _storeMarker =
+        await getResizedMarker('assets/markers/store_marker.png', 100);
+    _driverMarker =
+        await getResizedMarker('assets/markers/driver_marker.png', 100);
+    setState(() {
+      _isMarkersInitialized = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    _initCustomMarkers();
     return GoogleMap(
       initialCameraPosition: CameraPosition(
         target: widget.driverLatLng, // Center map on driver's current location
@@ -36,23 +72,21 @@ class _TripMapViewState extends State<TripMapView> {
         Marker(
           markerId: const MarkerId('driver_location'),
           position: widget.driverLatLng,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon: _driverMarker,
           infoWindow: const InfoWindow(title: 'Your Location'),
         ),
         // Pickup location marker
         Marker(
           markerId: const MarkerId('pickup_location'),
           position: widget.pickupLatLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          icon: _storeMarker,
           infoWindow: const InfoWindow(title: 'Pickup Location'),
         ),
         // Destination location marker
         Marker(
           markerId: const MarkerId('destination_location'),
           position: widget.destinationLatLng,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: _userMarker,
           infoWindow: const InfoWindow(title: 'Destination'),
         ),
       },

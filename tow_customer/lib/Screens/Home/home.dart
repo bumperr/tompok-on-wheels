@@ -11,6 +11,7 @@ import 'package:tow_customer/class/Service.dart';
 import 'package:tow_customer/class/Booking.dart';
 import 'package:tow_customer/class/ServiceProvider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 //--------------sample data----------------
 User john = User(
     id: 'johnthecatlover',
@@ -307,23 +308,23 @@ class _HomePageState extends State<HomePage> {
   late List<Pet> pets;
   late User currentUser;
 
-void _initializeServiceProviders() async {
-  final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
+  void _initializeServiceProviders() async {
+    final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
 
-  // Ensure we wait for all distance updates before continuing
-  await Future.wait(sampleServiceProviders.map((provider) async {
-    await provider.updateDistanceAndTravelTime(currentUser, apiKey);
-  }));
+    // Ensure we wait for all distance updates before continuing
+    await Future.wait(sampleServiceProviders.map((provider) async {
+      await provider.updateDistanceAndTravelTime(currentUser, apiKey);
+    }));
 
-  // Sort providers by updated distance
-  sampleServiceProviders.sort((a, b) => (a.distance ?? double.infinity)
-      .compareTo(b.distance ?? double.infinity));
+    // Sort providers by updated distance
+    sampleServiceProviders.sort((a, b) => (a.distance ?? double.infinity)
+        .compareTo(b.distance ?? double.infinity));
 
-  // Force UI refresh after async operations
-  if (mounted) {
-    setState(() {});
+    // Force UI refresh after async operations
+    if (mounted) {
+      setState(() {});
+    }
   }
-}
 
   @override
   void initState() {

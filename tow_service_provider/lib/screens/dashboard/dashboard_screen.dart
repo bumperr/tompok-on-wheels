@@ -112,9 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: Colors.grey.shade200,
                 child: Center(
                   child: Icon(
-                    _isSidebarOpen
-                        ? Icons.chevron_left
-                        : Icons.chevron_right,
+                    _isSidebarOpen ? Icons.chevron_left : Icons.chevron_right,
                     color: Colors.grey.shade700,
                   ),
                 ),
@@ -158,7 +156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildDashboardHeader() {
     final DateTime now = DateTime.now();
     final String formattedDate = DateFormat('EEEE, MMMM d, yyyy').format(now);
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -362,7 +360,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Upcoming'
                   'Upcoming Bookings',
                   style: TextStyle(
                     fontSize: 18,
@@ -409,7 +406,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 itemBuilder: (context, index) {
                   final booking = _recentBookings[index];
                   final date = booking['date'] as DateTime;
-                  final formattedDate = DateFormat('MMM d, h:mm a').format(date);
+                  final formattedDate =
+                      DateFormat('MMM d, h:mm a').format(date);
                   final statusColor = booking['status'] == 'Confirmed'
                       ? kConfirmedColor
                       : booking['status'] == 'Pending'
@@ -553,7 +551,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                          const days = [
+                            'Mon',
+                            'Tue',
+                            'Wed',
+                            'Thu',
+                            'Fri',
+                            'Sat',
+                            'Sun'
+                          ];
                           final dayIndex = value.toInt();
                           if (dayIndex >= 0 && dayIndex < days.length) {
                             return Padding(

@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:tow_customer/Screens/Home/home.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
 
 class BookingTrackingScreen extends StatefulWidget {
   final Booking booking;
@@ -33,6 +35,38 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
   late LatLng _userLocation;
   late LatLng _storeLocation;
   late LatLng _driverLocation;
+  // custom marker
+  late BitmapDescriptor _userMarker;
+  late BitmapDescriptor _storeMarker;
+  late BitmapDescriptor _driverMarker;
+
+  bool _isMarkersInitialized = false;
+
+  //initialize the marker
+  Future<BitmapDescriptor> getResizedMarker(String assetPath, int width) async {
+    ByteData data = await rootBundle.load(assetPath);
+    ui.Codec codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetWidth: width, // Set desired width (height auto scales)
+    );
+    ui.FrameInfo frameInfo = await codec.getNextFrame();
+    ByteData? byteData =
+        await frameInfo.image.toByteData(format: ui.ImageByteFormat.png);
+    Uint8List resizedImageBytes = byteData!.buffer.asUint8List();
+
+    return BitmapDescriptor.fromBytes(resizedImageBytes);
+  }
+
+  Future<void> _initCustomMarkers() async {
+    _userMarker = await getResizedMarker('assets/markers/user_marker.png', 100);
+    _storeMarker =
+        await getResizedMarker('assets/markers/store_marker.png', 100);
+    _driverMarker =
+        await getResizedMarker('assets/markers/driver_marker.png', 100);
+    setState(() {
+      _isMarkersInitialized = true;
+    });
+  }
 
   final List<TrackingStep> _trackingSteps = [
     TrackingStep(
@@ -76,7 +110,8 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
   @override
   void initState() {
     super.initState();
-
+    //initialize the marker
+    _initCustomMarkers();
     // Initialize locations with real coordinates
     try {
       _userLocation =
@@ -93,10 +128,8 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
 
     // Place driver at 70% of the way from store to user (for demo purposes)
     _driverLocation = LatLng(
-      _storeLocation.latitude +
-          (_userLocation.latitude - _storeLocation.latitude) * 0.7,
-      _storeLocation.longitude +
-          (_userLocation.longitude - _storeLocation.longitude) * 0.7,
+      4.382162043492692,
+      100.97037164602678,
     );
   }
 
@@ -158,30 +191,28 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
     return GoogleMap(
       initialCameraPosition: CameraPosition(
         target: _driverLocation, // Center map on driver's current location
-        zoom: 14,
+        zoom: 10,
       ),
       markers: {
         // User location marker (red)
         Marker(
           markerId: const MarkerId('user_location'),
           position: _userLocation,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          icon: _userMarker,
           infoWindow: const InfoWindow(title: 'Your Location'),
         ),
         // Store location marker (green)
         Marker(
           markerId: const MarkerId('store_location'),
           position: _storeLocation,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: _storeMarker,
           infoWindow: InfoWindow(title: widget.serviceProvider.name),
         ),
         // Driver location marker (blue)
         Marker(
           markerId: const MarkerId('driver_location'),
           position: _driverLocation,
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon: _driverMarker,
           infoWindow: const InfoWindow(title: 'Driver Location'),
         ),
       },

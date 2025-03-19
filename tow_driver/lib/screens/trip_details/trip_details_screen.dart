@@ -33,6 +33,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   @override
   void initState() {
     super.initState();
+
     _currentStatus = widget.trip.status;
   }
 
